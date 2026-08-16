@@ -136,9 +136,7 @@ class DealProfile(BaseModel):
     asking_price: Cited[float] = Field(default_factory=lambda: Cited[float]())
     asking_multiple: Cited[float] = Field(default_factory=lambda: Cited[float]())
 
-    days_sales_outstanding: Cited[list[float]] = Field(
-        default_factory=lambda: Cited[list[float]]()
-    )
+    days_sales_outstanding: Cited[list[float]] = Field(default_factory=lambda: Cited[list[float]]())
     acquisitions_completed: Cited[int] = Field(default_factory=lambda: Cited[int]())
 
     # --- derived metrics (computed, never extracted) ---

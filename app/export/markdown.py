@@ -29,9 +29,11 @@ def render(run: MemoRun) -> str:
         f"run `{run.run_id}`*"
     )
     L.append("")
-    L.append("> Machine-generated first draft. Every figure below is cited to a source "
-             "page. Uncited prose is model-generated and unverified. This is not an "
-             "investment recommendation.")
+    L.append(
+        "> Machine-generated first draft. Every figure below is cited to a source "
+        "page. Uncited prose is model-generated and unverified. This is not an "
+        "investment recommendation."
+    )
     L.append("")
 
     # 1
@@ -68,7 +70,11 @@ def render(run: MemoRun) -> str:
             if all(v is None for v in vals):
                 continue
             L.append(
-                "| " + label + " | " + " | ".join(f"{v:,.2f}" if v is not None else "n/a" for v in vals) + " |"
+                "| "
+                + label
+                + " | "
+                + " | ".join(f"{v:,.2f}" if v is not None else "n/a" for v in vals)
+                + " |"
             )
         margins = [y.ebitda_margin for y in srt]
         if any(x is not None for x in margins):
@@ -151,10 +157,10 @@ def render(run: MemoRun) -> str:
     if m.unreviewed_fields:
         L.append("**Pending human review** — extracted but below high confidence, or uncited:")
         L.append("")
-        for f in m.unreviewed_fields:
-            cited = getattr(p, f)
+        for field_name in m.unreviewed_fields:
+            cited = getattr(p, field_name)
             reason = cited.note or f"confidence: {cited.confidence.value}"
-            L.append(f"- `{f}` — {reason}")
+            L.append(f"- `{field_name}` — {reason}")
         L.append("")
     if m.not_found:
         L.append("**Not found in source document:** " + ", ".join(f"`{f}`" for f in m.not_found))

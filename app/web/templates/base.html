@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}CIM → IC Memo{% endblock %}</title>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <header class="bg-[#1a2f4b] text-white">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-baseline gap-4">
+      <a href="/" class="text-lg font-semibold tracking-tight">CIM → IC Memo</a>
+      <span class="text-slate-300 text-sm">automated screening memo drafting</span>
+      <nav class="ml-auto text-sm"><a href="/api/docs" class="text-slate-300 hover:text-white">API</a></nav>
+    </div>
+  </header>
+  <main class="max-w-6xl mx-auto px-6 py-8">{% block content %}{% endblock %}</main>
+  <footer class="max-w-6xl mx-auto px-6 py-10 text-xs text-slate-400">
+    Machine-generated first drafts for screening only. Not investment advice.
+  </footer>
+</body>
+</html>

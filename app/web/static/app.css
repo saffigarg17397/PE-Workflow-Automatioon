@@ -1,0 +1,11 @@
+.cite { font-size: .72rem; color: #2563eb; text-decoration: none; vertical-align: super; }
+.cite:hover { text-decoration: underline; }
+.uncited { font-size: .72rem; color: #b45309; font-style: italic; }
+.sev-high { background:#fef2f2; border-left:3px solid #dc2626; }
+.sev-medium { background:#fffbeb; border-left:3px solid #d97706; }
+.sev-low { background:#f8fafc; border-left:3px solid #94a3b8; }
+.prose-memo h2 { font-size:1.05rem; font-weight:600; color:#1a2f4b; margin:1.5rem 0 .5rem; }
+.prose-memo p { margin:.5rem 0; line-height:1.65; }
+.prose-memo table { width:100%; border-collapse:collapse; margin:.75rem 0; font-size:.85rem; }
+.prose-memo th { background:#1a2f4b; color:#fff; text-align:left; padding:.4rem .6rem; font-weight:600; }
+.prose-memo td { border:1px solid #dbe3ec; padding:.35rem .6rem; }

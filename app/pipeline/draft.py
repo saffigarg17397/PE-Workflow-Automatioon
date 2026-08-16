@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any
 
 from app.config import load_prompt
 from app.llm.client import CachedDocument, LLMClient
@@ -76,9 +75,7 @@ def decide(fit: ThesisFit, flags: list[RedFlag]) -> tuple[Recommendation, str]:
             f"Scores {fit.score:.0f}% against the {fit.thesis_name} thesis — below the "
             f"advance threshold but without disqualifying issues."
         )
-    return Recommendation.PASS, (
-        f"Scores {fit.score:.0f}% against the {fit.thesis_name} thesis."
-    )
+    return Recommendation.PASS, (f"Scores {fit.score:.0f}% against the {fit.thesis_name} thesis.")
 
 
 def build_context(profile: DealProfile, fit: ThesisFit, flags: list[RedFlag]) -> str:
@@ -118,7 +115,9 @@ def build_context(profile: DealProfile, fit: ThesisFit, flags: list[RedFlag]) ->
             lines.append(f"- {label}: {val}")
 
     lines.append("")
-    lines.append(f"## THESIS FIT — {fit.thesis_name} (score {fit.score:.0f}%, coverage {fit.coverage:.0f}%)")
+    lines.append(
+        f"## THESIS FIT — {fit.thesis_name} (score {fit.score:.0f}%, coverage {fit.coverage:.0f}%)"
+    )
     for c in fit.criteria:
         mark = {True: "PASS", False: "FAIL", None: "NOT EVALUABLE"}[c.passed]
         db = " [DEALBREAKER]" if c.is_dealbreaker else ""
@@ -130,7 +129,9 @@ def build_context(profile: DealProfile, fit: ThesisFit, flags: list[RedFlag]) ->
         lines.append("- None identified.")
     for f in sorted(flags, key=lambda f: f.severity.rank):
         cites = "".join(c.render() for c in f.citations)
-        lines.append(f"- [{f.severity.value.upper()}][{f.source.value}] {f.title}{cites}: {f.detail}")
+        lines.append(
+            f"- [{f.severity.value.upper()}][{f.source.value}] {f.title}{cites}: {f.detail}"
+        )
 
     lines.append("")
     lines.append("## FIELDS PENDING REVIEW (do not present these as established)")
@@ -180,11 +181,7 @@ def run(
     ]
 
     pending = profile.fields_needing_review()
-    not_found = [
-        n
-        for n in type(profile).model_fields
-        if getattr(profile, n).value is None
-    ]
+    not_found = [n for n in type(profile).model_fields if getattr(profile, n).value is None]
 
     return Memo(
         company_name=profile.company_name.value or doc.name,

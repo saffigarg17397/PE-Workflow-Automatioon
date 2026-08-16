@@ -47,24 +47,45 @@ def _styles() -> dict[str, ParagraphStyle]:
             "t", parent=base["Title"], fontSize=22, textColor=NAVY, spaceAfter=10
         ),
         "subtitle": ParagraphStyle(
-            "st", parent=base["Normal"], fontSize=13, textColor=GREY,
-            alignment=TA_CENTER, spaceAfter=28,
+            "st",
+            parent=base["Normal"],
+            fontSize=13,
+            textColor=GREY,
+            alignment=TA_CENTER,
+            spaceAfter=28,
         ),
         "h1": ParagraphStyle(
-            "h1", parent=base["Heading1"], fontSize=15, textColor=NAVY,
-            spaceBefore=16, spaceAfter=9,
+            "h1",
+            parent=base["Heading1"],
+            fontSize=15,
+            textColor=NAVY,
+            spaceBefore=16,
+            spaceAfter=9,
         ),
         "h2": ParagraphStyle(
-            "h2", parent=base["Heading2"], fontSize=12, textColor=NAVY,
-            spaceBefore=12, spaceAfter=6,
+            "h2",
+            parent=base["Heading2"],
+            fontSize=12,
+            textColor=NAVY,
+            spaceBefore=12,
+            spaceAfter=6,
         ),
         "body": ParagraphStyle(
-            "b", parent=base["Normal"], fontSize=10, leading=15,
-            alignment=TA_JUSTIFY, spaceAfter=9,
+            "b",
+            parent=base["Normal"],
+            fontSize=10,
+            leading=15,
+            alignment=TA_JUSTIFY,
+            spaceAfter=9,
         ),
         "bullet": ParagraphStyle(
-            "bu", parent=base["Normal"], fontSize=10, leading=15,
-            leftIndent=16, bulletIndent=6, spaceAfter=5,
+            "bu",
+            parent=base["Normal"],
+            fontSize=10,
+            leading=15,
+            leftIndent=16,
+            bulletIndent=6,
+            spaceAfter=5,
         ),
         "small": ParagraphStyle(
             "s", parent=base["Normal"], fontSize=8, textColor=GREY, leading=11, spaceAfter=6
@@ -145,8 +166,13 @@ def build_story(c: Company, S: dict[str, ParagraphStyle]) -> list[Any]:
         ("9.", "Transaction Overview"),
         ("A.", "Appendix — Supplemental Financial Detail"),
     ]
-    st += [_table([["Section", "Title"]] + [[n, t] for n, t in toc],
-                  [1.0 * inch, 4.6 * inch], align_right_from=99)]
+    st += [
+        _table(
+            [["Section", "Title"]] + [[n, t] for n, t in toc],
+            [1.0 * inch, 4.6 * inch],
+            align_right_from=99,
+        )
+    ]
     st += [
         Spacer(1, 18),
         P(
@@ -180,14 +206,20 @@ def build_story(c: Company, S: dict[str, ParagraphStyle]) -> list[Any]:
             f"${years[0]['revenue']:.1f} million in {years[0]['year']} to "
             f"${years[-1]['revenue']:.1f} million in {years[-1]['year']}."
         ),
-        B(f"<b>Attractive revenue mix.</b> Approximately {c.recurring_pct:.0f}% of revenue is "
-          f"recurring or contracted in nature, providing visibility into forward periods."),
+        B(
+            f"<b>Attractive revenue mix.</b> Approximately {c.recurring_pct:.0f}% of revenue is "
+            f"recurring or contracted in nature, providing visibility into forward periods."
+        ),
         B(f"<b>Diversified customer base.</b> {c.concentration_claim}"),
-        B("<b>Experienced management team.</b> The senior leadership team averages "
-          f"{sum(m['tenure'] for m in c.management) / len(c.management):.0f} years with the Company "
-          "and is committed to supporting a transition to new ownership."),
-        B("<b>Fragmented market.</b> The Company operates in a highly fragmented market "
-          "with meaningful opportunity for consolidation-led growth."),
+        B(
+            "<b>Experienced management team.</b> The senior leadership team averages "
+            f"{sum(m['tenure'] for m in c.management) / len(c.management):.0f} years with the Company "
+            "and is committed to supporting a transition to new ownership."
+        ),
+        B(
+            "<b>Fragmented market.</b> The Company operates in a highly fragmented market "
+            "with meaningful opportunity for consolidation-led growth."
+        ),
     ]
     st += [PageBreak()]
 
@@ -240,10 +272,14 @@ def build_story(c: Company, S: dict[str, ParagraphStyle]) -> list[Any]:
         )
     ]
     for m in c.end_markets:
-        st += [B(f"<b>{m}.</b> Customers in this segment value reliability, "
-                 f"responsiveness and compliance documentation. Management believes the "
-                 f"Company's positioning in this segment is durable and supports "
-                 f"above-market retention.")]
+        st += [
+            B(
+                f"<b>{m}.</b> Customers in this segment value reliability, "
+                f"responsiveness and compliance documentation. Management believes the "
+                f"Company's positioning in this segment is durable and supports "
+                f"above-market retention."
+            )
+        ]
     st += [P("Facilities", "h2")]
     st += [
         P(
@@ -301,7 +337,10 @@ def build_story(c: Company, S: dict[str, ParagraphStyle]) -> list[Any]:
     seg_rows.append(["Enterprise / national accounts", "$780M", "Selective participation"])
     seg_rows.append(["Mid-market", "$1,050M", "Core focus"])
     seg_rows.append(["Small / owner-operated", "$310M", "Opportunistic"])
-    st += [_table(seg_rows, [2.4 * inch, 1.5 * inch, 1.9 * inch], align_right_from=1), Spacer(1, 14)]
+    st += [
+        _table(seg_rows, [2.4 * inch, 1.5 * inch, 1.9 * inch], align_right_from=1),
+        Spacer(1, 14),
+    ]
     st += [
         P("Competitive Positioning", "h2"),
         P(
@@ -320,19 +359,31 @@ def build_story(c: Company, S: dict[str, ParagraphStyle]) -> list[Any]:
         P("Industry Trends", "h2"),
     ]
     for trend, detail in [
-        ("Consolidation", "Private-capital-backed platforms have become increasingly "
-                          "active acquirers of sub-scale operators, though the market "
-                          "remains substantially unconsolidated."),
-        ("Labor availability", "Skilled technical labor remains constrained across the "
-                               "sector; operators with structured training and career "
-                               "pathing have a recruiting advantage."),
-        ("Customer sophistication", "Customers increasingly require documented service "
-                                    "levels, compliance reporting and digital access to "
-                                    "service history, favoring operators with systems "
-                                    "investment."),
-        ("Pricing", "Input cost inflation has generally been passable to customers "
-                    "through contractual escalation provisions, supporting stable "
-                    "gross margin over the periods presented."),
+        (
+            "Consolidation",
+            "Private-capital-backed platforms have become increasingly "
+            "active acquirers of sub-scale operators, though the market "
+            "remains substantially unconsolidated.",
+        ),
+        (
+            "Labor availability",
+            "Skilled technical labor remains constrained across the "
+            "sector; operators with structured training and career "
+            "pathing have a recruiting advantage.",
+        ),
+        (
+            "Customer sophistication",
+            "Customers increasingly require documented service "
+            "levels, compliance reporting and digital access to "
+            "service history, favoring operators with systems "
+            "investment.",
+        ),
+        (
+            "Pricing",
+            "Input cost inflation has generally been passable to customers "
+            "through contractual escalation provisions, supporting stable "
+            "gross margin over the periods presented.",
+        ),
     ]:
         st += [B(f"<b>{trend}.</b> {detail}")]
     st += [PageBreak()]
@@ -373,7 +424,15 @@ def build_story(c: Company, S: dict[str, ParagraphStyle]) -> list[Any]:
     ab_rows.append(["Reported EBITDA", f"${latest['reported_ebitda']:.2f}", ""])
     for a in c.addbacks:
         label = a["description"]
-        ab_rows.append([label, f"${a['amount']:.2f}", f"FY{years[-1]['year'] - a['years_recurring'] + 1}-FY{years[-1]['year']}" if a["years_recurring"] > 1 else f"FY{years[-1]['year']}"])
+        ab_rows.append(
+            [
+                label,
+                f"${a['amount']:.2f}",
+                f"FY{years[-1]['year'] - a['years_recurring'] + 1}-FY{years[-1]['year']}"
+                if a["years_recurring"] > 1
+                else f"FY{years[-1]['year']}",
+            ]
+        )
     ab_rows.append(["Adjusted EBITDA", f"${latest['adj_ebitda']:.2f}", ""])
     st += [_table(ab_rows, [3.3 * inch, 1.1 * inch, 1.6 * inch]), Spacer(1, 10)]
     st += [
@@ -388,14 +447,15 @@ def build_story(c: Company, S: dict[str, ParagraphStyle]) -> list[Any]:
     # quarterly + working capital
     st += [P("Quarterly Revenue Distribution", "h2"), P(c.seasonality_note)]
     q_split = (
-        [0.14, 0.29, 0.33, 0.24]
-        if c.slug == "verdant_landscaping"
-        else [0.23, 0.26, 0.26, 0.25]
+        [0.14, 0.29, 0.33, 0.24] if c.slug == "verdant_landscaping" else [0.23, 0.26, 0.26, 0.25]
     )
     q_rows = [["($ in millions)", "Q1", "Q2", "Q3", "Q4"]]
     for y in years:
         q_rows.append([str(y["year"])] + [f"${y['revenue'] * s:.1f}" for s in q_split])
-    st += [_table(q_rows, [1.6 * inch, 1.0 * inch, 1.0 * inch, 1.0 * inch, 1.0 * inch]), Spacer(1, 14)]
+    st += [
+        _table(q_rows, [1.6 * inch, 1.0 * inch, 1.0 * inch, 1.0 * inch, 1.0 * inch]),
+        Spacer(1, 14),
+    ]
 
     st += [P("Working Capital", "h2")]
     st += [
@@ -482,7 +542,10 @@ def build_story(c: Company, S: dict[str, ParagraphStyle]) -> list[Any]:
     mgmt_rows = [["Name", "Role", "Tenure (yrs)"]]
     for m in c.management:
         mgmt_rows.append([m["name"], m["role"], str(m["tenure"])])
-    st += [_table(mgmt_rows, [1.9 * inch, 2.6 * inch, 1.3 * inch], align_right_from=2), Spacer(1, 14)]
+    st += [
+        _table(mgmt_rows, [1.9 * inch, 2.6 * inch, 1.3 * inch], align_right_from=2),
+        Spacer(1, 14),
+    ]
 
     for m in c.management:
         bio = (
@@ -595,17 +658,22 @@ def build_story(c: Company, S: dict[str, ParagraphStyle]) -> list[Any]:
             "materially."
         )
     ]
-    proj_rows = [["($ in millions)", f"FY{latest['year'] + 1}E", f"FY{latest['year'] + 2}E", f"FY{latest['year'] + 3}E"]]
+    proj_rows = [
+        [
+            "($ in millions)",
+            f"FY{latest['year'] + 1}E",
+            f"FY{latest['year'] + 2}E",
+            f"FY{latest['year'] + 3}E",
+        ]
+    ]
+    proj_rows.append(["Revenue"] + [f"${latest['revenue'] * (1.12**n):.1f}" for n in (1, 2, 3)])
     proj_rows.append(
-        ["Revenue"] + [f"${latest['revenue'] * (1.12 ** n):.1f}" for n in (1, 2, 3)]
-    )
-    proj_rows.append(
-        ["Adjusted EBITDA"] + [f"${latest['adj_ebitda'] * (1.18 ** n):.2f}" for n in (1, 2, 3)]
+        ["Adjusted EBITDA"] + [f"${latest['adj_ebitda'] * (1.18**n):.2f}" for n in (1, 2, 3)]
     )
     proj_rows.append(
         ["Adj. EBITDA Margin"]
         + [
-            f"{100 * latest['adj_ebitda'] * (1.18 ** n) / (latest['revenue'] * (1.12 ** n)):.1f}%"
+            f"{100 * latest['adj_ebitda'] * (1.18**n) / (latest['revenue'] * (1.12**n)):.1f}%"
             for n in (1, 2, 3)
         ]
     )
@@ -632,7 +700,9 @@ def build_story(c: Company, S: dict[str, ParagraphStyle]) -> list[Any]:
     ]
     tx_rows = [["Item", "Value"]]
     tx_rows.append(["Enterprise Value (asking)", f"${c.asking_price:.1f}M"])
-    tx_rows.append([f"Implied Multiple (FY{latest['year']} Adj. EBITDA)", f"{c.asking_multiple:.1f}x"])
+    tx_rows.append(
+        [f"Implied Multiple (FY{latest['year']} Adj. EBITDA)", f"{c.asking_multiple:.1f}x"]
+    )
     tx_rows.append([f"FY{latest['year']} Adjusted EBITDA", f"${latest['adj_ebitda']:.2f}M"])
     tx_rows.append([f"FY{latest['year']} Revenue", f"${latest['revenue']:.1f}M"])
     st += [_table(tx_rows, [3.6 * inch, 2.4 * inch]), Spacer(1, 14)]
@@ -653,28 +723,49 @@ def build_story(c: Company, S: dict[str, ParagraphStyle]) -> list[Any]:
         ),
     ]
     for rf, detail in [
-        ("Economic conditions", "The Company's customers may reduce discretionary "
-                                "spending in a downturn, which could affect project "
-                                "and enhancement revenue in particular."),
-        ("Key personnel", "The Company's performance depends on its ability to retain "
-                          "senior management and skilled delivery staff. The loss of "
-                          "key personnel could adversely affect operations and "
-                          "customer relationships."),
-        ("Customer relationships", "Customer agreements may generally be terminated on "
-                                   "notice. The loss of one or more significant "
-                                   "relationships could have a material effect on "
-                                   "results."),
-        ("Competition", "The Company operates in a competitive market and may face "
-                        "pricing pressure from existing or new entrants."),
-        ("Labor costs", "Wage inflation and constrained availability of skilled labor "
-                        "could compress margins if cost increases cannot be passed "
-                        "through."),
-        ("Acquisition integration", "The Company's growth plan contemplates "
-                                    "acquisitions. Integration may prove more "
-                                    "difficult or costly than anticipated."),
-        ("Financial information", "Financial information presented herein is unaudited "
-                                  "and has been prepared by management. Prospective "
-                                  "purchasers should conduct independent verification."),
+        (
+            "Economic conditions",
+            "The Company's customers may reduce discretionary "
+            "spending in a downturn, which could affect project "
+            "and enhancement revenue in particular.",
+        ),
+        (
+            "Key personnel",
+            "The Company's performance depends on its ability to retain "
+            "senior management and skilled delivery staff. The loss of "
+            "key personnel could adversely affect operations and "
+            "customer relationships.",
+        ),
+        (
+            "Customer relationships",
+            "Customer agreements may generally be terminated on "
+            "notice. The loss of one or more significant "
+            "relationships could have a material effect on "
+            "results.",
+        ),
+        (
+            "Competition",
+            "The Company operates in a competitive market and may face "
+            "pricing pressure from existing or new entrants.",
+        ),
+        (
+            "Labor costs",
+            "Wage inflation and constrained availability of skilled labor "
+            "could compress margins if cost increases cannot be passed "
+            "through.",
+        ),
+        (
+            "Acquisition integration",
+            "The Company's growth plan contemplates "
+            "acquisitions. Integration may prove more "
+            "difficult or costly than anticipated.",
+        ),
+        (
+            "Financial information",
+            "Financial information presented herein is unaudited "
+            "and has been prepared by management. Prospective "
+            "purchasers should conduct independent verification.",
+        ),
     ]:
         st += [B(f"<b>{rf}.</b> {detail}")]
     st += [PageBreak()]
@@ -713,9 +804,7 @@ def build_story(c: Company, S: dict[str, ParagraphStyle]) -> list[Any]:
     capex_rows.append(["Maintenance capex"] + [f"${y['revenue'] * 0.012:.2f}" for y in years])
     capex_rows.append(["Growth capex"] + [f"${y['revenue'] * 0.008:.2f}" for y in years])
     capex_rows.append(["Total capex"] + [f"${y['revenue'] * 0.020:.2f}" for y in years])
-    capex_rows.append(
-        ["% of revenue"] + ["2.0%" for _ in years]
-    )
+    capex_rows.append(["% of revenue"] + ["2.0%" for _ in years])
     st += [_table(capex_rows, [2.3 * inch] + [1.15 * inch] * len(years)), Spacer(1, 12)]
     st += [
         P(
@@ -732,7 +821,9 @@ def ground_truth(c: Company) -> dict[str, Any]:
     years = c.financials
     latest = years[-1]
     total_addbacks = sum(a["amount"] for a in c.addbacks)
-    cagr = round(100 * ((years[-1]["revenue"] / years[0]["revenue"]) ** (1 / (len(years) - 1)) - 1), 1)
+    cagr = round(
+        100 * ((years[-1]["revenue"] / years[0]["revenue"]) ** (1 / (len(years) - 1)) - 1), 1
+    )
     return {
         "slug": c.slug,
         "company_name": c.name,

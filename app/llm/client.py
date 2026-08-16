@@ -18,7 +18,7 @@ from __future__ import annotations
 import base64
 import time
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 import anthropic
 from pydantic import BaseModel
@@ -77,9 +77,7 @@ class LLMClient:
 
     # ------------------------------------------------------------ internals
 
-    def _record(
-        self, stage: str, effort: str, usage: Any, latency_ms: int
-    ) -> StageTelemetry:
+    def _record(self, stage: str, effort: str, usage: Any, latency_ms: int) -> StageTelemetry:
         inp = getattr(usage, "input_tokens", 0) or 0
         out = getattr(usage, "output_tokens", 0) or 0
         cr = getattr(usage, "cache_read_input_tokens", 0) or 0
@@ -122,7 +120,9 @@ class LLMClient:
             raise LLMError(f"Could not reach the API in stage '{stage}': {e}") from e
 
         latency = int((time.monotonic() - started) * 1000)
-        self._record(stage, kwargs.get("output_config", {}).get("effort", "high"), resp.usage, latency)
+        self._record(
+            stage, kwargs.get("output_config", {}).get("effort", "high"), resp.usage, latency
+        )
 
         # Check stop_reason before touching content — a refusal returns HTTP 200
         # with empty content, and indexing content[0] would raise IndexError.
@@ -148,13 +148,21 @@ class LLMClient:
                 model=self.model,
                 max_tokens=16000,
                 thinking={"type": "adaptive"},
-                output_config={"effort": effort},
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [doc.block(citations=False), {"type": "text", "text": prompt}],
-                    }
-                ],
+                # The SDK models these as TypedDicts; the dicts we build are
+                # structurally correct but not statically inferable as such.
+                output_config=cast(Any, {"effort": effort}),
+                messages=cast(
+                    Any,
+                    [
+                        {
+                            "role": "user",
+                            "content": [
+                                doc.block(citations=False),
+                                {"type": "text", "text": prompt},
+                            ],
+                        }
+                    ],
+                ),
                 output_format=schema,
             )
         except anthropic.APIStatusError as e:
@@ -168,7 +176,7 @@ class LLMClient:
         parsed = resp.parsed_output
         if parsed is None:
             raise LLMError(f"Stage '{stage}' returned no parseable output")
-        return parsed  # type: ignore[no-any-return]
+        return cast(T, parsed)
 
     def extract_cited(self, stage: str, doc: CachedDocument, prompt: str) -> Any:
         """Free-text pass with citations enabled.
@@ -228,12 +236,18 @@ class LLMClient:
         materially wrong on this content."""
         r = self._client.messages.count_tokens(
             model=self.model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [doc.block(citations=False, cache=False), {"type": "text", "text": prompt}],
-                }
-            ],
+            messages=cast(
+                Any,
+                [
+                    {
+                        "role": "user",
+                        "content": [
+                            doc.block(citations=False, cache=False),
+                            {"type": "text", "text": prompt},
+                        ],
+                    }
+                ],
+            ),
         )
         return int(r.input_tokens)
 

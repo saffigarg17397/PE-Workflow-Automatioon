@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="grid md:grid-cols-3 gap-6">
+  <section class="md:col-span-1 bg-white rounded-lg border border-slate-200 p-5">
+    <h2 class="font-semibold text-[#1a2f4b] mb-1">Screen a CIM</h2>
+    <p class="text-xs text-slate-500 mb-4">Takes 40–90 seconds. Cost is reported per run.</p>
+    <form hx-post="/run" hx-target="#progress" hx-encoding="multipart/form-data" class="space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Sample CIM</label>
+        <select name="sample" class="w-full border border-slate-300 rounded px-2 py-1.5 text-sm">
+          <option value="">— upload my own —</option>
+          {% for s in samples %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">…or upload a PDF</label>
+        <input type="file" name="upload" accept="application/pdf"
+               class="w-full text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-slate-100">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Investment thesis</label>
+        <select name="thesis" class="w-full border border-slate-300 rounded px-2 py-1.5 text-sm">
+          {% for t in theses %}
+          <option value="{{ t }}" {% if t == default_thesis %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="w-full bg-[#1a2f4b] text-white rounded py-2 text-sm font-medium hover:bg-[#24406a]">
+        Generate memo
+      </button>
+    </form>
+    <div id="progress" class="mt-4"></div>
+  </section>
+
+  <section class="md:col-span-2">
+    <h2 class="font-semibold text-[#1a2f4b] mb-3">Recent runs</h2>
+    {% if not runs %}
+      <div class="bg-white border border-dashed border-slate-300 rounded-lg p-8 text-center text-sm text-slate-500">
+        No runs yet. Screen a sample CIM to get started.
+      </div>
+    {% else %}
+    <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wide">
+          <tr>
+            <th class="text-left px-4 py-2">Company</th>
+            <th class="text-left px-4 py-2">Rec</th>
+            <th class="text-right px-4 py-2">Fit</th>
+            <th class="text-right px-4 py-2">Flags</th>
+            <th class="text-right px-4 py-2">Review</th>
+            <th class="text-right px-4 py-2">Cost</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for r in runs %}
+          <tr class="border-t border-slate-100 hover:bg-slate-50">
+            <td class="px-4 py-2">
+              <a href="/memo/{{ r.run_id }}" class="font-medium text-[#1a2f4b] hover:underline">{{ r.company_name }}</a>
+              <div class="text-xs text-slate-400">{{ r.thesis_name }}</div>
+            </td>
+            <td class="px-4 py-2">
+              {% set c = {'advance':'bg-emerald-100 text-emerald-800','more_info':'bg-amber-100 text-amber-800','pass':'bg-rose-100 text-rose-800'} %}
+              <span class="text-xs px-2 py-0.5 rounded {{ c[r.recommendation] }}">{{ r.recommendation.replace('_',' ') }}</span>
+            </td>
+            <td class="px-4 py-2 text-right">{{ '%.0f'|format(r.fit_score) }}%</td>
+            <td class="px-4 py-2 text-right">{{ r.flag_count }}</td>
+            <td class="px-4 py-2 text-right">
+              {% if r.pending_count %}
+                <a href="/review/{{ r.run_id }}" class="text-amber-700 hover:underline">{{ r.pending_count }}</a>
+              {% else %}<span class="text-slate-300">0</span>{% endif %}
+            </td>
+            <td class="px-4 py-2 text-right text-slate-500">${{ '%.4f'|format(r.cost_usd) }}</td>
+            <td class="px-4 py-2 text-right">
+              <button hx-post="/delete/{{ r.run_id }}" hx-confirm="Delete this run?"
+                      class="text-xs text-slate-400 hover:text-rose-600">×</button>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

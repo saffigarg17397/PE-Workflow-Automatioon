@@ -1,0 +1,18 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: ruff check app scripts evals tests
+      - run: ruff format --check app scripts evals tests
+      - run: mypy app
+      - run: python -m scripts.generate_cims
+      - run: pytest -q --cov=app --cov-report=term-missing

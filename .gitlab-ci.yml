@@ -1,0 +1,55 @@
+# Three stages. lint and test run on every push and need no API key; eval makes
+# real API calls and is manual-only, so a normal pipeline is free and fast.
+
+stages:
+  - lint
+  - test
+  - eval
+
+default:
+  image: python:3.11-slim
+  cache:
+    key:
+      files: [requirements.txt]
+    paths: [.venv/]
+  before_script:
+    - python -m venv .venv
+    - .venv/bin/pip install -q --upgrade pip
+    - .venv/bin/pip install -q -r requirements.txt
+
+lint:
+  stage: lint
+  script:
+    - .venv/bin/ruff check app scripts evals tests
+    - .venv/bin/ruff format --check app scripts evals tests
+    - .venv/bin/mypy app
+
+test:
+  stage: test
+  script:
+    # The corpus is regenerated rather than trusted from git, so a drift between
+    # the generator and the committed PDFs fails here rather than silently
+    # invalidating every eval score downstream.
+    - .venv/bin/python -m scripts.generate_cims
+    - .venv/bin/pytest -q --cov=app --cov-report=term-missing
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    when: always
+    paths: [data/sample_cims/]
+    expire_in: 1 week
+
+eval:
+  stage: eval
+  # Manual: this stage spends money. It is also gated on the key being present,
+  # so a fork or a contributor without credentials never sees a red pipeline.
+  when: manual
+  allow_failure: true
+  rules:
+    - if: $ANTHROPIC_API_KEY
+  script:
+    - .venv/bin/python -m scripts.generate_cims
+    - .venv/bin/python -m evals.run_evals --label "$CI_COMMIT_SHORT_SHA"
+  artifacts:
+    when: always
+    paths: [evals/results/]
+    expire_in: 30 days

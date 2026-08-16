@@ -99,15 +99,25 @@ def test_rule_flags_carry_citations(profile):
 
 
 def test_recurring_one_time_addback_rule():
-    from app.models.deal import DealProfile, EbitdaAddback, FiscalYear
     from app.models.citation import Cited
+    from app.models.deal import DealProfile, EbitdaAddback, FiscalYear
 
     p = DealProfile()
     p.financials = Cited(value=[FiscalYear(year=2024, revenue=24.3, adjusted_ebitda=4.18)])
     p.addbacks = Cited(
         value=[
-            EbitdaAddback(description="One-time platform migration", amount=0.62, years_recurring=3, is_labelled_one_time=True),
-            EbitdaAddback(description="One-time recruiting", amount=0.28, years_recurring=3, is_labelled_one_time=True),
+            EbitdaAddback(
+                description="One-time platform migration",
+                amount=0.62,
+                years_recurring=3,
+                is_labelled_one_time=True,
+            ),
+            EbitdaAddback(
+                description="One-time recruiting",
+                amount=0.28,
+                years_recurring=3,
+                is_labelled_one_time=True,
+            ),
         ]
     )
     flags = rules.run(p)

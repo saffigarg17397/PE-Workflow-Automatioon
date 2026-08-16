@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}{{ memo.company_name }} — IC Memo{% endblock %}
+{% macro cites(items) %}{% for c in items %}<a class="cite" href="#" title="{{ c.quote|e }}">[p.{{ c.page }}]</a>{% endfor %}{% endmacro %}
+{% block content %}
+<div class="flex items-start gap-4 mb-6">
+  <div class="flex-1">
+    <a href="/" class="text-xs text-slate-400 hover:underline">← runs</a>
+    <h1 class="text-2xl font-semibold text-[#1a2f4b] mt-1">{{ memo.company_name }}</h1>
+    <p class="text-xs text-slate-500 mt-1">
+      Screened against <code>{{ memo.thesis_name }}</code> · {{ run.source_file }} ({{ run.page_count }}pp) ·
+      run <code>{{ run.run_id }}</code>
+    </p>
+  </div>
+  <div class="text-right text-xs space-y-1">
+    <a href="/export/{{ run.run_id }}.md" class="block text-[#1a2f4b] underline">Markdown</a>
+    <a href="/export/{{ run.run_id }}.docx" class="block text-[#1a2f4b] underline">Word</a>
+    {% if memo.unreviewed_fields %}
+    <a href="/review/{{ run.run_id }}" class="block text-amber-700 underline">{{ memo.unreviewed_fields|length }} to review</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="bg-amber-50 border border-amber-200 rounded p-3 text-xs text-amber-900 mb-6">
+  Machine-generated first draft. Hover a <span class="cite">[p.N]</span> marker to see the source text.
+  Uncited prose is model-generated and unverified. Not an investment recommendation.
+</div>
+
+<article class="bg-white rounded-lg border border-slate-200 p-8 prose-memo">
+  {% set rc = {'advance':'text-emerald-700','more_info':'text-amber-700','pass':'text-rose-700'} %}
+  <h2>1. Recommendation: <span class="{{ rc[memo.recommendation.value] }}">{{ memo.recommendation.value.replace('_',' ')|upper }}</span></h2>
+  <p>{{ memo.recommendation_rationale }}</p>
+
+  <h2>2. Business Overview</h2>
+  <p>{{ memo.business_overview }}</p>
+
+  <h2>3. Financial Summary</h2>
+  {% set years = profile.financials.value or [] %}
+  {% if years %}
+  <p class="text-xs text-slate-500">Historical performance ($M) {{ cites(profile.financials.unique_citations[:2]) }}</p>
+  <table>
+    <tr><th>Metric</th>{% for y in years|sort(attribute='year') %}<th class="text-right">{{ y.year }}</th>{% endfor %}</tr>
+    <tr><td>Revenue</td>{% for y in years|sort(attribute='year') %}<td class="text-right">{{ '%.2f'|format(y.revenue) if y.revenue else 'n/a' }}</td>{% endfor %}</tr>
+    <tr><td>Reported EBITDA</td>{% for y in years|sort(attribute='year') %}<td class="text-right">{{ '%.2f'|format(y.reported_ebitda) if y.reported_ebitda else 'n/a' }}</td>{% endfor %}</tr>
+    <tr><td>Adjusted EBITDA</td>{% for y in years|sort(attribute='year') %}<td class="text-right">{{ '%.2f'|format(y.adjusted_ebitda) if y.adjusted_ebitda else 'n/a' }}</td>{% endfor %}</tr>
+    <tr><td>Adj. EBITDA margin</td>{% for y in years|sort(attribute='year') %}<td class="text-right">{{ '%.1f'|format(y.ebitda_margin) ~ '%' if y.ebitda_margin else 'n/a' }}</td>{% endfor %}</tr>
+  </table>
+  {% endif %}
+  <p class="text-xs text-slate-600">
+    {% if profile.revenue_cagr is not none %}Revenue CAGR <strong>{{ '%.1f'|format(profile.revenue_cagr) }}%</strong> · {% endif %}
+    {% if profile.addback_pct_of_ebitda is not none %}add-backs <strong>{{ '%.1f'|format(profile.addback_pct_of_ebitda) }}%</strong> of adj. EBITDA · {% endif %}
+    {% if profile.asking_multiple.value is not none %}asking <strong>{{ '%.1f'|format(profile.asking_multiple.value) }}x</strong>{{ cites(profile.asking_multiple.unique_citations) }}{% endif %}
+  </p>
+  <p>{{ memo.financial_summary }}</p>
+
+  <h2>4. Thesis Fit — {{ '%.0f'|format(memo.thesis_fit.score) }}%</h2>
+  <p class="text-xs text-slate-500">Coverage: {{ '%.0f'|format(memo.thesis_fit.coverage) }}% of criteria evaluable from this document.</p>
+  <table>
+    <tr><th>Criterion</th><th>Result</th><th>Actual</th><th>Target</th></tr>
+    {% for c in memo.thesis_fit.criteria %}
+    <tr>
+      <td>{{ c.name }}</td>
+      <td>{% if c.passed is none %}<span class="text-slate-400">n/a</span>
+          {% elif c.passed %}<span class="text-emerald-700">pass</span>
+          {% else %}<span class="text-rose-700 font-semibold">fail{% if c.is_dealbreaker %} — dealbreaker{% endif %}</span>{% endif %}</td>
+      <td>{{ c.actual }}</td><td class="text-slate-500">{{ c.target }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p>{{ memo.thesis_commentary }}</p>
+
+  <h2>5. Key Risks</h2>
+  {% if not memo.red_flags %}<p class="text-slate-500">No red flags identified.</p>{% endif %}
+  {% for src, label, note in [('rule','Detected by rules','deterministic, reproducible'),('model','Identified in review','qualitative — verify before relying on')] %}
+    {% set group = memo.flags_by_severity | selectattr('source.value','equalto',src) | list %}
+    {% if group %}
+      <p class="text-xs font-semibold text-slate-700 mt-4">{{ label }} <span class="font-normal text-slate-400">({{ note }})</span></p>
+      {% for f in group %}
+      <div class="sev-{{ f.severity.value }} rounded px-3 py-2 my-2 text-sm">
+        <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ f.severity.value }}</span>
+        <strong>{{ f.title }}</strong>{{ cites(f.unique_citations) }}
+        <div class="text-slate-600 text-xs mt-1">{{ f.detail }}</div>
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+
+  <h2>6. Diligence Priorities</h2>
+  <ol class="list-decimal ml-5 text-sm space-y-1">
+    {% for d in memo.diligence_priorities %}<li>{{ d }}</li>{% endfor %}
+  </ol>
+
+  <h2>7. Sources and Confidence</h2>
+  <p class="text-sm">{{ memo.confidence_note }}</p>
+  {% if memo.unreviewed_fields %}
+  <p class="text-xs font-semibold text-slate-700 mt-3">Pending human review</p>
+  <ul class="text-xs text-slate-600 ml-4 list-disc">
+    {% for f in memo.unreviewed_fields %}
+      {% set c = profile[f] %}
+      <li><code>{{ f }}</code> — {{ c.note or 'confidence: ' ~ c.confidence.value }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</article>
+
+<div class="mt-4 bg-white rounded-lg border border-slate-200 p-4">
+  <p class="text-xs text-slate-500 mb-2">
+    Pipeline cost <strong>${{ '%.4f'|format(run.total_cost_usd) }}</strong> ·
+    {{ '%.1f'|format(run.total_latency_ms / 1000) }}s ·
+    {{ run.telemetry|length }} model calls ·
+    {{ '{:,}'.format(run.cache_savings_tokens) }} tokens served from cache
+  </p>
+  <table class="w-full text-xs">
+    <thead class="text-slate-500"><tr>
+      <th class="text-left py-1">Stage</th><th class="text-left">Effort</th>
+      <th class="text-right">In</th><th class="text-right">Out</th><th class="text-right">Cached</th>
+      <th class="text-right">Latency</th><th class="text-right">Cost</th></tr></thead>
+    <tbody>
+    {% for t in run.telemetry %}
+      <tr class="border-t border-slate-100">
+        <td class="py-1">{{ t.stage }}</td><td>{{ t.effort }}</td>
+        <td class="text-right">{{ '{:,}'.format(t.input_tokens) }}</td>
+        <td class="text-right">{{ '{:,}'.format(t.output_tokens) }}</td>
+        <td class="text-right {% if t.cache_hit %}text-emerald-600{% else %}text-slate-300{% endif %}">{{ '{:,}'.format(t.cache_read_tokens) }}</td>
+        <td class="text-right">{{ '%.1f'|format(t.latency_ms / 1000) }}s</td>
+        <td class="text-right">${{ '%.4f'|format(t.cost_usd) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

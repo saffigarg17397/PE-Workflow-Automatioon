@@ -64,13 +64,35 @@ def brightpath_raw() -> DealProfileRaw:
         revenue_model=RevenueModel.CONTRACTED,
         recurring_revenue_pct=31.0,
         financials=[
-            FiscalYear(year=2022, revenue=6.8, gross_profit=2.31, reported_ebitda=0.79, adjusted_ebitda=1.02),
-            FiscalYear(year=2023, revenue=8.1, gross_profit=2.68, reported_ebitda=0.88, adjusted_ebitda=1.19),
-            FiscalYear(year=2024, revenue=9.3, gross_profit=2.98, reported_ebitda=0.94, adjusted_ebitda=1.34),
+            FiscalYear(
+                year=2022,
+                revenue=6.8,
+                gross_profit=2.31,
+                reported_ebitda=0.79,
+                adjusted_ebitda=1.02,
+            ),
+            FiscalYear(
+                year=2023,
+                revenue=8.1,
+                gross_profit=2.68,
+                reported_ebitda=0.88,
+                adjusted_ebitda=1.19,
+            ),
+            FiscalYear(
+                year=2024,
+                revenue=9.3,
+                gross_profit=2.98,
+                reported_ebitda=0.94,
+                adjusted_ebitda=1.34,
+            ),
         ],
         addbacks=[
-            EbitdaAddback(description="De novo practice ramp losses", amount=0.18, years_recurring=3),
-            EbitdaAddback(description="Owner compensation normalization", amount=0.13, years_recurring=3),
+            EbitdaAddback(
+                description="De novo practice ramp losses", amount=0.18, years_recurring=3
+            ),
+            EbitdaAddback(
+                description="Owner compensation normalization", amount=0.13, years_recurring=3
+            ),
             EbitdaAddback(
                 description="Acquisition integration costs",
                 amount=0.09,
@@ -86,8 +108,19 @@ def brightpath_raw() -> DealProfileRaw:
         top_customer_pct=34.6,
         top_five_customer_pct=80.1,
         management=[
-            Manager(name="Dr. Priya Raman", role="Chief Executive Officer", tenure_years=11, is_founder=True, staying_post_close=True),
-            Manager(name="Curtis Hale", role="Chief Financial Officer", tenure_years=3, staying_post_close=True),
+            Manager(
+                name="Dr. Priya Raman",
+                role="Chief Executive Officer",
+                tenure_years=11,
+                is_founder=True,
+                staying_post_close=True,
+            ),
+            Manager(
+                name="Curtis Hale",
+                role="Chief Financial Officer",
+                tenure_years=3,
+                staying_post_close=True,
+            ),
         ],
         asking_price=12.1,
         asking_multiple=9.0,
@@ -103,11 +136,18 @@ def brightpath_cited_response() -> FakeResponse:
         content=[
             FakeTextBlock(
                 text="FIELD: company_name | VALUE: BrightPath Dental Partners",
-                citations=[FakeCitation(start_page_number=3, cited_text="BrightPath Dental Partners is a dental support organization")],
+                citations=[
+                    FakeCitation(
+                        start_page_number=3,
+                        cited_text="BrightPath Dental Partners is a dental support organization",
+                    )
+                ],
             ),
             FakeTextBlock(
                 text="FIELD: headquarters | VALUE: Tampa, Florida",
-                citations=[FakeCitation(start_page_number=3, cited_text="headquartered in Tampa, Florida")],
+                citations=[
+                    FakeCitation(start_page_number=3, cited_text="headquartered in Tampa, Florida")
+                ],
             ),
             FakeTextBlock(
                 text="FIELD: year_founded | VALUE: 2013",
@@ -115,7 +155,9 @@ def brightpath_cited_response() -> FakeResponse:
             ),
             FakeTextBlock(
                 text="FIELD: employees | VALUE: 88",
-                citations=[FakeCitation(start_page_number=3, cited_text="employs approximately 88 people")],
+                citations=[
+                    FakeCitation(start_page_number=3, cited_text="employs approximately 88 people")
+                ],
             ),
             FakeTextBlock(
                 text="FIELD: latest_revenue | VALUE: 9.3",
@@ -132,7 +174,11 @@ def brightpath_cited_response() -> FakeResponse:
             # Disagreement: cited says 33.0, structured says 34.6 -> MEDIUM
             FakeTextBlock(
                 text="FIELD: top_customer_pct | VALUE: 33.0",
-                citations=[FakeCitation(start_page_number=11, cited_text="Sunshine Health (Medicaid MCO) 34.6%")],
+                citations=[
+                    FakeCitation(
+                        start_page_number=11, cited_text="Sunshine Health (Medicaid MCO) 34.6%"
+                    )
+                ],
             ),
             FakeTextBlock(
                 text="FIELD: top_five_customer_pct | VALUE: 80.1",
@@ -160,8 +206,12 @@ def brightpath_flags_response() -> FakeResponse:
                     "while the customer table shows Sunshine Health at 34.6% of revenue."
                 ),
                 citations=[
-                    FakeCitation(start_page_number=3, cited_text="benefits from a diversified payor base"),
-                    FakeCitation(start_page_number=11, cited_text="Sunshine Health (Medicaid MCO) 34.6%"),
+                    FakeCitation(
+                        start_page_number=3, cited_text="benefits from a diversified payor base"
+                    ),
+                    FakeCitation(
+                        start_page_number=11, cited_text="Sunshine Health (Medicaid MCO) 34.6%"
+                    ),
                 ],
             ),
             FakeTextBlock(
@@ -169,7 +219,9 @@ def brightpath_flags_response() -> FakeResponse:
                     "FINDING: Payor agreements terminable on 90 days notice | CATEGORY: contract_risk | SEVERITY: medium\n"
                     "Revenue described as contracted rests on agreements terminable on short notice."
                 ),
-                citations=[FakeCitation(start_page_number=11, cited_text="terminable on 90 days notice")],
+                citations=[
+                    FakeCitation(start_page_number=11, cited_text="terminable on 90 days notice")
+                ],
             ),
         ]
     )

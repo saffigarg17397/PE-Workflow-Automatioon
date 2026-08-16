@@ -135,14 +135,14 @@ def r_recurring_one_time_addbacks(p: DealProfile) -> RedFlag | None:
     periods each adjustment covers.
     """
     offenders = [
-        a
-        for a in (p.addbacks.value or [])
-        if a.is_labelled_one_time and a.years_recurring >= 2
+        a for a in (p.addbacks.value or []) if a.is_labelled_one_time and a.years_recurring >= 2
     ]
     if not offenders:
         return None
     total = sum(a.amount for a in offenders)
-    names = "; ".join(f"{a.description} (${a.amount:.2f}M, {a.years_recurring} yrs)" for a in offenders[:3])
+    names = "; ".join(
+        f"{a.description} (${a.amount:.2f}M, {a.years_recurring} yrs)" for a in offenders[:3]
+    )
     return RedFlag(
         category=FlagCategory.EARNINGS_QUALITY,
         severity=Severity.HIGH,

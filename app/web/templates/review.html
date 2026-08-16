@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Review — {{ run.memo.company_name }}{% endblock %}
+{% block content %}
+<a href="/memo/{{ run.run_id }}" class="text-xs text-slate-400 hover:underline">← memo</a>
+<h1 class="text-2xl font-semibold text-[#1a2f4b] mt-1">Review queue — {{ run.memo.company_name }}</h1>
+<p class="text-sm text-slate-600 mt-2 mb-6 max-w-3xl">
+  {{ items|length }} field{{ 's' if items|length != 1 }} did not reach high confidence. Each is shown with its
+  source page and the reason it was flagged. These figures appear in the memo marked as unverified —
+  confirm them against the source before the memo is relied on.
+</p>
+
+{% if not items %}
+<div class="bg-emerald-50 border border-emerald-200 rounded p-6 text-sm text-emerald-800">
+  Nothing pending — every extracted field was cited and both extraction passes agreed.
+</div>
+{% endif %}
+
+<div class="space-y-3">
+{% for it in items %}
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="flex items-start gap-3">
+      <div class="flex-1">
+        <div class="flex items-center gap-2">
+          <code class="text-sm font-semibold text-[#1a2f4b]">{{ it.field }}</code>
+          {% set cc = {'high':'bg-emerald-100 text-emerald-800','medium':'bg-amber-100 text-amber-800','low':'bg-rose-100 text-rose-800'} %}
+          <span class="text-[10px] uppercase px-1.5 py-0.5 rounded {{ cc[it.confidence] }}">{{ it.confidence }}</span>
+        </div>
+        <div class="text-sm mt-1">
+          {% if it.value is none %}<span class="text-slate-400 italic">not found in document</span>
+          {% else %}<span class="font-medium">{{ it.value }}</span>{% endif %}
+        </div>
+        {% if it.note %}<div class="text-xs text-amber-700 mt-1">{{ it.note }}</div>{% endif %}
+      </div>
+      <div class="w-1/2">
+        {% if it.citations %}
+          {% for c in it.citations %}
+          <div class="text-xs bg-slate-50 border-l-2 border-blue-400 px-2 py-1.5 mb-1 rounded-r">
+            <div class="text-blue-700 font-medium mb-0.5">p.{{ c.page }}</div>
+            <div class="text-slate-600 italic">“{{ c.quote[:220] }}{% if c.quote|length > 220 %}…{% endif %}”</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-xs text-slate-400 italic">No source passage located — verify manually.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endfor %}
+</div>
+{% endblock %}
