@@ -1,0 +1,56 @@
+name: software_buyout
+description: >
+  Vertical B2B software buyout. Underwrite durable recurring revenue, gross
+  margin structure, and net retention. Contrast case for the services thesis —
+  demonstrates the scoring engine is not hard-coded to one firm's box.
+
+criteria:
+  - name: Revenue in target band
+    field: latest_revenue
+    op: between
+    value: [10.0, 150.0]
+    weight: 1.0
+    target_label: "$10M–$150M"
+
+  - name: Recurring revenue
+    field: recurring_revenue_pct
+    op: gte
+    value: 80.0
+    weight: 2.5
+    dealbreaker: true
+    target_label: ">=80% ARR"
+
+  - name: EBITDA margin floor
+    field: latest_ebitda_margin
+    op: gte
+    value: 20.0
+    weight: 1.5
+    target_label: ">=20%"
+
+  - name: Growth
+    field: revenue_cagr
+    op: gte
+    value: 15.0
+    weight: 2.0
+    target_label: ">=15% CAGR"
+
+  - name: Customer concentration ceiling
+    field: top_customer_pct
+    op: lte
+    value: 10.0
+    weight: 1.5
+    target_label: "<=10% single customer"
+
+  - name: Earnings quality
+    field: addback_pct_of_ebitda
+    op: lte
+    value: 15.0
+    weight: 1.5
+    target_label: "addbacks <=15% of adj. EBITDA"
+
+  - name: Entry multiple
+    field: asking_multiple
+    op: lte
+    value: 15.0
+    weight: 1.0
+    target_label: "<=15.0x adj. EBITDA"
