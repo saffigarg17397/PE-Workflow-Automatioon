@@ -50,8 +50,19 @@ class RedFlag(BaseModel):
     citations: list[Citation] = Field(default_factory=list)
     rule_id: str | None = Field(default=None, description="Set when source is RULE")
 
+    @property
+    def unique_citations(self) -> list[Citation]:
+        seen: set[tuple[int, int | None]] = set()
+        out: list[Citation] = []
+        for c in self.citations:
+            key = (c.page, c.end_page)
+            if key not in seen:
+                seen.add(key)
+                out.append(c)
+        return out
+
     def render(self) -> str:
-        cites = "".join(c.render() for c in self.citations)
+        cites = "".join(c.render() for c in self.unique_citations)
         return f"**{self.title}**{cites} — {self.detail}"
 
 

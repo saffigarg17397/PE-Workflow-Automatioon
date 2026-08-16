@@ -53,6 +53,19 @@ class Cited(BaseModel, Generic[T]):
     note: str | None = Field(default=None, description="Why confidence is low, if it is")
 
     @property
+    def unique_citations(self) -> list[Citation]:
+        """Distinct pages, first occurrence wins. The same fact cited twice from
+        one page is one provenance claim, not two."""
+        seen: set[tuple[int, int | None]] = set()
+        out: list[Citation] = []
+        for c in self.citations:
+            key = (c.page, c.end_page)
+            if key not in seen:
+                seen.add(key)
+                out.append(c)
+        return out
+
+    @property
     def is_sourced(self) -> bool:
         return self.value is not None and len(self.citations) > 0
 
@@ -62,8 +75,15 @@ class Cited(BaseModel, Generic[T]):
         return not self.is_sourced or self.confidence != Confidence.HIGH
 
     def render(self) -> str:
-        """Value plus inline citation markers, for memo rendering."""
+        """Value plus inline citation markers, for memo rendering.
+
+        An uncited value is marked as such rather than printed bare. The
+        structured pass may well be right, but a figure a reader cannot trace
+        must never look like one they can — that distinction is the whole point
+        of the tool.
+        """
         if self.value is None:
             return "_not found_"
-        cites = "".join(c.render() for c in self.citations)
-        return f"{self.value}{cites}"
+        if not self.citations:
+            return f"{self.value} _[uncited — pending review]_"
+        return f"{self.value}" + "".join(c.render() for c in self.unique_citations)

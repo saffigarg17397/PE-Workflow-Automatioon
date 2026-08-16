@@ -160,7 +160,11 @@ def _resolve(
     fact = facts.get(field)
     if value is None:
         return None, [], Confidence.LOW, "Not found by structured extraction"
-    if fact is None or not fact.found:
+    if fact is None or not fact.found or not fact.citations:
+        # The cited pass either couldn't find the field or named a value without
+        # attaching a source span. Either way the value is unverified: keep it
+        # (the structured pass is schema-valid) but never let it reach a memo
+        # as an established figure.
         return value, [], Confidence.LOW, "Extracted but no supporting citation located"
 
     # Both passes produced something — do they agree?
