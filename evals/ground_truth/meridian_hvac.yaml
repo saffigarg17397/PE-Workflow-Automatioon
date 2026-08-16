@@ -1,0 +1,38 @@
+slug: meridian_hvac
+company_name: Meridian Mechanical Services
+notes: Control case. Should score well against services_rollup and produce no high-severity flags.
+fields:
+  company_name: Meridian Mechanical Services
+  headquarters: Columbus, Ohio
+  year_founded: 2004
+  employees: 142
+  recurring_revenue_pct: 58.0
+  latest_revenue: 18.4
+  latest_reported_ebitda: 2.81
+  latest_adjusted_ebitda: 3.06
+  revenue_cagr: 13.8
+  top_customer_pct: 11.2
+  top_five_customer_pct: 36.9
+  customer_count: 310
+  asking_price: 21.4
+  asking_multiple: 7.0
+  total_addbacks: 0.25
+  addback_pct_of_ebitda: 8.2
+  acquisitions_completed: 1
+  latest_dso: 38.2
+  end_markets_count: 4
+  management_count: 4
+expected_flags: []
+financials:
+- year: 2022
+  revenue: 14.2
+  reported_ebitda: 1.92
+  adjusted_ebitda: 2.13
+- year: 2023
+  revenue: 16.1
+  reported_ebitda: 2.35
+  adjusted_ebitda: 2.58
+- year: 2024
+  revenue: 18.4
+  reported_ebitda: 2.81
+  adjusted_ebitda: 3.06

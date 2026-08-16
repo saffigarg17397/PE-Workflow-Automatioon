@@ -1,0 +1,42 @@
+slug: atlas_bookkeeping
+company_name: Atlas Financial Operations
+notes: Planted defects. (1) Founder/CEO Janet Okonkwo is not staying post-close and personally holds the
+  top client relationships (stated p.21); the remaining team averages under 3 years tenure. (2) Engagement
+  letters lack change-of-control provisions, which the CIM presents as a positive.
+fields:
+  company_name: Atlas Financial Operations
+  headquarters: Denver, Colorado
+  year_founded: 2015
+  employees: 74
+  recurring_revenue_pct: 83.0
+  latest_revenue: 12.2
+  latest_reported_ebitda: 1.98
+  latest_adjusted_ebitda: 2.23
+  revenue_cagr: 17.1
+  top_customer_pct: 8.1
+  top_five_customer_pct: 27.6
+  customer_count: 187
+  asking_price: 16.7
+  asking_multiple: 7.5
+  total_addbacks: 0.25
+  addback_pct_of_ebitda: 11.2
+  acquisitions_completed: 1
+  latest_dso: 32.8
+  end_markets_count: 4
+  management_count: 3
+expected_flags:
+- contract_risk
+- key_person
+financials:
+- year: 2022
+  revenue: 8.9
+  reported_ebitda: 1.42
+  adjusted_ebitda: 1.61
+- year: 2023
+  revenue: 10.6
+  reported_ebitda: 1.71
+  adjusted_ebitda: 1.94
+- year: 2024
+  revenue: 12.2
+  reported_ebitda: 1.98
+  adjusted_ebitda: 2.23

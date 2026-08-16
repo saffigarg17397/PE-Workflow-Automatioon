@@ -1,0 +1,41 @@
+slug: northgate_msp
+company_name: Northgate Technology Partners
+notes: 'Planted defect: addbacks total $1.57M against $4.18M adjusted EBITDA (37.6%), and three of five
+  are labelled ''one-time'' or ''non-recurring'' while recurring in all three historical years. Reported
+  EBITDA is roughly flat at ~$2.2-2.6M; the adjusted growth story is manufactured.'
+fields:
+  company_name: Northgate Technology Partners
+  headquarters: Charlotte, North Carolina
+  year_founded: 2009
+  employees: 118
+  recurring_revenue_pct: 71.0
+  latest_revenue: 24.3
+  latest_reported_ebitda: 2.61
+  latest_adjusted_ebitda: 4.18
+  revenue_cagr: 10.8
+  top_customer_pct: 9.8
+  top_five_customer_pct: 33.4
+  customer_count: 214
+  asking_price: 33.4
+  asking_multiple: 8.0
+  total_addbacks: 1.57
+  addback_pct_of_ebitda: 37.6
+  acquisitions_completed: 2
+  latest_dso: 42.6
+  end_markets_count: 4
+  management_count: 4
+expected_flags:
+- earnings_quality
+financials:
+- year: 2022
+  revenue: 19.8
+  reported_ebitda: 2.18
+  adjusted_ebitda: 3.41
+- year: 2023
+  revenue: 22.1
+  reported_ebitda: 2.44
+  adjusted_ebitda: 3.79
+- year: 2024
+  revenue: 24.3
+  reported_ebitda: 2.61
+  adjusted_ebitda: 4.18

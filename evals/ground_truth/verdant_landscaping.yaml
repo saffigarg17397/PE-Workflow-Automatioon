@@ -1,0 +1,44 @@
+slug: verdant_landscaping
+company_name: Verdant Grounds Management
+notes: "Planted defects. (1) DSO deteriorates 38 -> 49.5 -> 67.3 days across the period, a 77% increase,\
+  \ with no explanation offered \u2014 cash conversion is degrading while EBITDA grows. (2) Seasonality\
+  \ is understated: the CIM claims 'limited seasonality' while the quarterly table on p.14 shows Q1 at\
+  \ 14% of annual revenue. (3) 30-day termination for convenience on contracts described as recurring."
+fields:
+  company_name: Verdant Grounds Management
+  headquarters: Raleigh, North Carolina
+  year_founded: 2011
+  employees: 96
+  recurring_revenue_pct: 64.0
+  latest_revenue: 6.4
+  latest_reported_ebitda: 0.71
+  latest_adjusted_ebitda: 0.86
+  revenue_cagr: 12.0
+  top_customer_pct: 14.8
+  top_five_customer_pct: 48.9
+  customer_count: 126
+  asking_price: 5.6
+  asking_multiple: 6.5
+  total_addbacks: 0.15
+  addback_pct_of_ebitda: 17.4
+  acquisitions_completed: 0
+  latest_dso: 67.3
+  end_markets_count: 4
+  management_count: 3
+expected_flags:
+- contract_risk
+- disclosure
+- working_capital
+financials:
+- year: 2022
+  revenue: 5.1
+  reported_ebitda: 0.61
+  adjusted_ebitda: 0.72
+- year: 2023
+  revenue: 5.7
+  reported_ebitda: 0.66
+  adjusted_ebitda: 0.79
+- year: 2024
+  revenue: 6.4
+  reported_ebitda: 0.71
+  adjusted_ebitda: 0.86
