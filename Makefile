@@ -1,4 +1,4 @@
-.PHONY: install cims demo seed serve test lint typecheck eval eval-seeds sweep clean
+.PHONY: install cims demo seed seed-one serve test lint typecheck eval eval-seeds sweep clean
 
 VENV := .venv
 PY := $(VENV)/bin/python
@@ -24,6 +24,12 @@ demo: cims
 
 seed: cims
 	$(PY) -m scripts.run_demo --all --seed
+
+# Cheapest path to a populated hosted demo: one document instead of five.
+# Northgate is the one to pick if you only run one — its planted defect is
+# add-back quality, which is the finding a PE reader recognises fastest.
+seed-one: cims
+	$(PY) -m scripts.run_demo data/sample_cims/northgate_msp.pdf --seed
 
 serve:
 	$(VENV)/bin/uvicorn app.main:app --reload --port 8000

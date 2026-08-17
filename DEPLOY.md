@@ -22,6 +22,42 @@ when you want to drive it in an interview.
 
 ---
 
+## Doing this without spending anything
+
+Hosting is free outright — Render's free plan runs the container, and demo mode
+means the deployed instance never holds an API key or makes a call.
+
+Generation is the only step that consumes model tokens, and it can be covered by
+free credit rather than a purchase:
+
+* **Anthropic's new-account grant — $5, no card.** Console → Plans & Billing →
+  *Claim free credits*, gated on SMS verification (a real mobile, not VoIP).
+  Nothing in this repo changes; the key works as-is. Five memos cost $2–3, so
+  the grant covers the whole corpus with change left over.
+* **Google Cloud's $300 / 90-day trial**, spent on Claude via Vertex AI, if the
+  Anthropic grant is unavailable. This needs a code change — `AnthropicVertex`
+  in place of `Anthropic` in `app/llm/client.py` — and it is worth confirming
+  that the model id and the citations + structured-output features this pipeline
+  depends on are available on Vertex before committing to it. Not the first
+  choice.
+
+To spend as little of that as possible:
+
+```bash
+make seed-one                       # one document, ~$0.50, still a real demo
+CIM_MODEL=claude-sonnet-5 make seed  # whole corpus at roughly half the cost
+```
+
+`make seed-one` is the floor. A single memo with working citations, a populated
+review queue and a real red flag demonstrates everything the tool claims; the
+other four documents make the *eval* meaningful, not the demo.
+
+What cannot be free is generating the memos at all. The seed files have to be
+genuine pipeline output — a demo of a provenance system that ships invented
+numbers is self-refuting, and any reader who checks one citation finds out.
+
+---
+
 ## Steps
 
 ### 1. Generate the memos locally (needs your API key)
@@ -34,6 +70,8 @@ make eval-seeds               # scores those same runs — no API calls, free
 ```
 
 `make seed` is the only step that costs money — roughly $2–3 for five memos, once.
+`make seed-one` does a single document for ~$0.50 if you are working off the
+free grant.
 
 `make eval-seeds` scores the artifacts you just generated rather than
 regenerating them. Scoring needs no model call, so running the corpus twice
