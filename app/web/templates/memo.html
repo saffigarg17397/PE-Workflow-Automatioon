@@ -20,6 +20,13 @@
   </div>
 </div>
 
+{% if memo.health.warning %}
+<div class="bg-rose-50 border-2 border-rose-300 rounded p-4 text-sm text-rose-900 mb-4">
+  <div class="font-semibold mb-1">⚠ Extraction degraded</div>
+  {{ memo.health.warning }}
+</div>
+{% endif %}
+
 <div class="bg-amber-50 border border-amber-200 rounded p-3 text-xs text-amber-900 mb-6">
   Machine-generated first draft. Hover a <span class="cite">[p.N]</span> marker to see the source text.
   Uncited prose is model-generated and unverified. Not an investment recommendation.
@@ -90,6 +97,14 @@
   </ol>
 
   <h2>7. Sources and Confidence</h2>
+  {% set h = memo.health %}
+  <p class="text-xs text-slate-500">
+    Extraction health: {{ h.fields_extracted }}/{{ h.fields_total }} fields extracted
+    ({{ '%.0f'|format(h.extraction_rate) }}%) ·
+    <span class="{% if h.citation_rate < 40 %}text-rose-700 font-semibold{% else %}text-emerald-700{% endif %}">
+      {{ h.fields_cited }} cited ({{ '%.0f'|format(h.citation_rate) }}%)</span> ·
+    {{ h.facts_located }} located by citation pass · {{ h.flags_parsed }} qualitative finding(s)
+  </p>
   <p class="text-sm">{{ memo.confidence_note }}</p>
   {% if memo.unreviewed_fields %}
   <p class="text-xs font-semibold text-slate-700 mt-3">Pending human review</p>

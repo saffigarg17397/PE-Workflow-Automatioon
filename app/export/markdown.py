@@ -29,6 +29,9 @@ def render(run: MemoRun) -> str:
         f"run `{run.run_id}`*"
     )
     L.append("")
+    if m.health.warning:
+        L.append(f"> **⚠ EXTRACTION DEGRADED** — {m.health.warning}")
+        L.append("")
     L.append(
         "> Machine-generated first draft. Every figure below is cited to a source "
         "page. Uncited prose is model-generated and unverified. This is not an "
@@ -151,6 +154,17 @@ def render(run: MemoRun) -> str:
 
     # 7
     L.append("## 7. Sources and Confidence")
+    L.append("")
+    if m.health.warning:
+        L.append(f"**⚠ {m.health.warning}**")
+        L.append("")
+    h = m.health
+    L.append(
+        f"Extraction health: {h.fields_extracted}/{h.fields_total} fields extracted "
+        f"({h.extraction_rate:.0f}%), {h.fields_cited} carrying a source page "
+        f"({h.citation_rate:.0f}%), {h.facts_located} located by the citation pass, "
+        f"{h.flags_parsed} qualitative finding(s) parsed."
+    )
     L.append("")
     L.append(m.confidence_note)
     L.append("")

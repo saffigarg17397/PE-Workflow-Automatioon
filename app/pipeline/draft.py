@@ -19,9 +19,30 @@ from app.config import load_prompt
 from app.llm.client import CachedDocument, LLMClient
 from app.models.deal import DealProfile
 from app.models.flags import RedFlag, Severity, ThesisFit
-from app.models.memo import Memo, Recommendation
+from app.models.memo import ExtractionHealth, Memo, Recommendation
 
-_SECTION = re.compile(r"^##\s*(\w+)\s*$", re.MULTILINE)
+SECTION_NAMES = (
+    "recommendation_rationale",
+    "business_overview",
+    "financial_summary",
+    "thesis_commentary",
+    "diligence_priorities",
+)
+
+# Emphasis and trailing punctuation around the heading are tolerated: a missed
+# heading renders that memo section empty, with no error to notice.
+#
+# The hash prefix is optional, but a hash-less line is only accepted when the
+# word is one of SECTION_NAMES — otherwise any bolded word on its own line
+# would silently become a section boundary and truncate the section above it.
+_SECTION = re.compile(r"^#{1,4}\s*[*_`]{0,2}\s*(\w+)\s*[*_`]{0,2}\s*:?\s*$", re.MULTILINE)
+# Leading bullet/number markers on a list item.
+_LIST_ITEM = re.compile(r"^\s*(?:[-•*+]|\d{1,2}[.)])\s+")
+
+_BARE_SECTION = re.compile(
+    rf"^\s*[*_`]{{1,2}}\s*({'|'.join(SECTION_NAMES)})\s*[*_`]{{1,2}}\s*:?\s*$",
+    re.MULTILINE | re.IGNORECASE,
+)
 
 _FORMAT_INSTRUCTION = """
 
@@ -100,7 +121,9 @@ def build_context(profile: DealProfile, fit: ThesisFit, flags: list[RedFlag]) ->
                 default=str,
             )[:1400]
         else:
-            rendered = str(val)
+            # Cap scalars as well as lists: an over-long extracted string would
+            # otherwise inflate every drafting call's prompt without adding signal.
+            rendered = str(val)[:1400]
         cites = "".join(c.render() for c in cited.citations) or "[uncited]"
         lines.append(f"- {name}: {rendered} {cites} (confidence: {cited.confidence.value})")
 
@@ -142,12 +165,24 @@ def build_context(profile: DealProfile, fit: ThesisFit, flags: list[RedFlag]) ->
 
 
 def parse_sections(text: str) -> dict[str, str]:
-    out: dict[str, str] = {}
-    parts = _SECTION.split(text)
-    # split yields [preamble, name, body, name, body, ...]
-    for i in range(1, len(parts) - 1, 2):
-        out[parts[i].strip().lower()] = parts[i + 1].strip()
-    return out
+    """Split model output into named sections.
+
+    Falls back to hash-less bolded headings only if the hash form found nothing,
+    so a normal response is never re-parsed by the looser pattern.
+    """
+
+    def _split(pattern: re.Pattern[str]) -> dict[str, str]:
+        out: dict[str, str] = {}
+        parts = pattern.split(text)
+        # split yields [preamble, name, body, name, body, ...]
+        for i in range(1, len(parts) - 1, 2):
+            out[parts[i].strip().lower()] = parts[i + 1].strip()
+        return out
+
+    found = _split(_SECTION)
+    if any(k in SECTION_NAMES for k in found):
+        return found
+    return _split(_BARE_SECTION) or found
 
 
 def run(
@@ -156,7 +191,9 @@ def run(
     profile: DealProfile,
     fit: ThesisFit,
     flags: list[RedFlag],
+    health: ExtractionHealth | None = None,
 ) -> Memo:
+    health = health or ExtractionHealth()
     rec, rationale = decide(fit, flags)
 
     prompt = (
@@ -174,10 +211,17 @@ def run(
     text = client.complete("draft", None, prompt, max_tokens=20000)
     sections = parse_sections(text)
 
+    # Accept bullets, numbered lists, and asterisks — the prompt asks for "- "
+    # but a numbered list is the most common substitution, and dropping those
+    # would leave the section empty for no good reason.
     priorities = [
-        line.lstrip("-• ").strip()
-        for line in sections.get("diligence_priorities", "").splitlines()
-        if line.strip().startswith(("-", "•"))
+        p_
+        for p_ in (
+            _LIST_ITEM.sub("", line).strip().strip("*_`").strip()
+            for line in sections.get("diligence_priorities", "").splitlines()
+            if _LIST_ITEM.match(line)
+        )
+        if p_
     ]
 
     pending = profile.fields_needing_review()
@@ -196,9 +240,11 @@ def run(
         diligence_priorities=priorities,
         unreviewed_fields=pending,
         not_found=not_found,
+        health=health,
         confidence_note=(
             f"{len(pending)} field(s) below high confidence or uncited; "
             f"{len(not_found)} field(s) not found in the source document. "
+            f"{health.citation_rate:.0f}% of extracted fields carry a source page. "
             f"Figures in this memo are cited to source pages; uncited claims are "
             f"model-generated prose and should be verified."
         ),

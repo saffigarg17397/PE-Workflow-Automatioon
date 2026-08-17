@@ -11,10 +11,12 @@ deterministic rules engine, never as the extraction path.
 
 from __future__ import annotations
 
+import struct
 from dataclasses import dataclass
 from pathlib import Path
 
 from pypdf import PdfReader
+from pypdf.errors import PyPdfError
 
 from app.llm.client import CachedDocument
 
@@ -46,8 +48,15 @@ def run(path: str | Path) -> IngestedDoc:
     if p.suffix.lower() != ".pdf":
         raise ValueError(f"Expected a PDF, got {p.suffix}")
 
-    reader = PdfReader(str(p))
-    pages = [(pg.extract_text() or "") for pg in reader.pages]
+    # pypdf raises a family of PyPdfError subclasses on malformed input, and can
+    # also surface plain OSError/struct errors on truncated files. Callers (CLI,
+    # web, eval) all handle ValueError, so normalise here rather than leaking a
+    # library-specific type through three layers.
+    try:
+        reader = PdfReader(str(p))
+        pages = [(pg.extract_text() or "") for pg in reader.pages]
+    except (PyPdfError, OSError, ValueError, struct.error) as e:
+        raise ValueError(f"{p.name} is not a readable PDF: {e}") from e
     if not any(t.strip() for t in pages):
         raise ValueError(
             f"{p.name} has no extractable text — scanned/image-only PDFs are not supported"

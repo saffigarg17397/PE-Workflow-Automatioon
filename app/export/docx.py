@@ -58,6 +58,13 @@ def render(run: MemoRun) -> bytes:
     dr.font.size = Pt(8.5)
     dr.font.color.rgb = GREY
 
+    if m.health.warning:
+        warn = doc.add_paragraph()
+        wr = warn.add_run(f"EXTRACTION DEGRADED — {m.health.warning}")
+        wr.bold = True
+        wr.font.color.rgb = RGBColor(0xB4, 0x1C, 0x1C)
+        wr.font.size = Pt(9)
+
     # 1
     doc.add_heading(f"1. Recommendation: {_REC_LABEL[m.recommendation.value]}", level=2)
     doc.add_paragraph(m.recommendation_rationale)
@@ -163,6 +170,12 @@ def render(run: MemoRun) -> bytes:
 
     # 7
     doc.add_heading("7. Sources and Confidence", level=2)
+    h = m.health
+    doc.add_paragraph(
+        f"Extraction health: {h.fields_extracted}/{h.fields_total} fields extracted "
+        f"({h.extraction_rate:.0f}%), {h.fields_cited} carrying a source page "
+        f"({h.citation_rate:.0f}%)."
+    )
     doc.add_paragraph(m.confidence_note)
     if m.unreviewed_fields:
         pending_heading = doc.add_paragraph()

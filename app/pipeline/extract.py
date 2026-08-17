@@ -23,6 +23,7 @@ from app.config import load_prompt
 from app.llm.client import CachedDocument, LLMClient
 from app.models.citation import Citation, Cited, Confidence
 from app.models.deal import DealProfile, DealProfileRaw
+from app.models.memo import ExtractionHealth
 
 # Join keys. Left side is the name used in the cited pass's output lines; right
 # side is the path into the structured profile. Must stay in sync with
@@ -45,7 +46,36 @@ CITED_FIELDS: dict[str, str] = {
     "latest_dso": "days_sales_outstanding",
 }
 
-_FIELD_LINE = re.compile(r"FIELD:\s*(\w+)\s*\|\s*VALUE:\s*([^|\n]*)", re.IGNORECASE)
+# Markdown emphasis around the labels is tolerated: models very often bold or
+# italicise `FIELD:` / `VALUE:` even when the prompt shows them plain, and a
+# parser that misses those lines silently drops every citation — which would
+# degrade the whole document to LOW confidence with no visible error.
+# `E` absorbs markdown emphasis wherever it lands — models write `**FIELD:**`,
+# `**FIELD**:`, and `- FIELD:` interchangeably, and the colon may sit inside or
+# outside the emphasis.
+_E = r"[*_`]*"
+_FIELD_LINE = re.compile(
+    rf"{_E}FIELD{_E}:{_E}\s*(\w+)\s*{_E}\|{_E}\s*{_E}VALUE{_E}:{_E}\s*([^|\n]*)",
+    re.IGNORECASE,
+)
+
+# Values the model uses to mean "absent". Treating these as found would attach a
+# real citation to a non-answer, which is worse than reporting nothing.
+_NULL_VALUES = {
+    "not_found",
+    "notfound",
+    "n/a",
+    "na",
+    "none",
+    "unknown",
+    "not disclosed",
+    "not stated",
+    "not specified",
+    "-",
+    "—",
+}
+
+_NUMBER = re.compile(r"-?\d[\d,]*\.?\d*")
 
 
 class CitedFact:
@@ -53,15 +83,26 @@ class CitedFact:
 
     def __init__(self, field: str, value: str, citations: list[Citation]) -> None:
         self.field = field
-        self.raw_value = value.strip()
+        self.raw_value = value.strip().strip("*_`").strip()
         self.citations = citations
 
     @property
     def found(self) -> bool:
-        return self.raw_value.upper() != "NOT_FOUND" and bool(self.raw_value)
+        return bool(self.raw_value) and self.raw_value.lower() not in _NULL_VALUES
+
+    @property
+    def is_ambiguous(self) -> bool:
+        """True when the value names more than one number — a range, or a figure
+        quoted alongside a comparison. Taking the first number silently would
+        put an arbitrary pick into a memo, so the caller downgrades instead."""
+        if not self.found:
+            return False
+        return len(_NUMBER.findall(self.raw_value.replace("$", ""))) > 1
 
     def as_float(self) -> float | None:
-        m = re.search(r"-?[\d,]+\.?\d*", self.raw_value.replace("$", ""))
+        if not self.found:
+            return None
+        m = _NUMBER.search(self.raw_value.replace("$", ""))
         if not m:
             return None
         try:
@@ -170,9 +211,15 @@ def _resolve(
     # Both passes produced something — do they agree?
     note: str | None = None
     conf = Confidence.HIGH
-    if isinstance(value, int | float):
+    if fact.is_ambiguous:
+        conf = Confidence.MEDIUM
+        note = f"Cited passage names more than one figure: {fact.raw_value!r}"
+    elif isinstance(value, int | float):
         cited_val = fact.as_float()
-        if cited_val is not None and value:
+        if cited_val is None:
+            conf = Confidence.MEDIUM
+            note = f"Cited passage has no readable figure: {fact.raw_value!r}"
+        elif value:
             drift = abs(cited_val - float(value)) / max(abs(float(value)), 1e-9)
             if drift > 0.02:
                 conf = Confidence.MEDIUM
@@ -251,11 +298,31 @@ def build_profile(raw: DealProfileRaw, facts: dict[str, CitedFact]) -> DealProfi
     return p
 
 
-def run(client: LLMClient, doc: CachedDocument) -> DealProfile:
-    """Both passes, joined."""
+# Profile attributes the citation pass is asked to locate. Derived from
+# CITED_FIELDS so the two can't drift; composite targets collapse to one entry.
+CITABLE_ATTRS: frozenset[str] = frozenset(CITED_FIELDS.values())
+
+
+def health_of(profile: DealProfile, facts: dict[str, CitedFact]) -> ExtractionHealth:
+    """Summarise whether the join produced provenance or just values."""
+    names = [n for n in type(profile).model_fields if isinstance(getattr(profile, n), Cited)]
+    extracted = [n for n in names if getattr(profile, n).value is not None]
+    citable = [n for n in extracted if n in CITABLE_ATTRS]
+    return ExtractionHealth(
+        fields_total=len(names),
+        fields_extracted=len(extracted),
+        fields_citable=len(citable),
+        fields_cited=sum(1 for n in citable if getattr(profile, n).citations),
+        facts_located=sum(1 for f in facts.values() if f.found),
+    )
+
+
+def run(client: LLMClient, doc: CachedDocument) -> tuple[DealProfile, ExtractionHealth]:
+    """Both passes, joined, plus a health signal for the join itself."""
     raw = client.extract_structured(
         "extract_structured", doc, load_prompt("extract_structured"), DealProfileRaw
     )
     cited_resp = client.extract_cited("extract_cited", doc, load_prompt("extract_cited"))
     facts = parse_cited_response(cited_resp)
-    return build_profile(raw, facts)
+    profile = build_profile(raw, facts)
+    return profile, health_of(profile, facts)

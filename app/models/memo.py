@@ -33,6 +33,74 @@ class StageTelemetry(BaseModel):
         return self.cache_read_tokens > 0
 
 
+class ExtractionHealth(BaseModel):
+    """Did extraction actually work, or did it merely finish?
+
+    The failure this exists to catch: the cited pass drifts from the requested
+    format, the parser matches nothing, every field falls back to LOW
+    confidence — and the memo still renders, looking normal, with no provenance
+    behind any number. That is the most dangerous outcome for a diligence tool,
+    because it is indistinguishable from success at a glance.
+    """
+
+    fields_total: int = 0
+    fields_extracted: int = 0
+    fields_cited: int = 0
+    fields_citable: int = Field(
+        default=0,
+        description="Extracted fields the citation pass is actually asked to locate",
+    )
+    facts_located: int = Field(default=0, description="Fields the cited pass returned")
+    flags_parsed: int = 0
+
+    @property
+    def citation_rate(self) -> float:
+        """Share of *citable* extracted values carrying a source page.
+
+        The denominator is deliberately not every extracted field. Several
+        fields (narrative description, service lines, management roster) are
+        filled by the structured pass only and are never asked of the citation
+        pass, so counting them would peg a perfectly healthy run near the
+        degradation threshold and make the signal useless.
+        """
+        base = self.fields_citable or self.fields_extracted
+        if not base:
+            return 0.0
+        return round(100 * self.fields_cited / base, 1)
+
+    @property
+    def extraction_rate(self) -> float:
+        if not self.fields_total:
+            return 0.0
+        return round(100 * self.fields_extracted / self.fields_total, 1)
+
+    @property
+    def degraded(self) -> bool:
+        """True when provenance has collapsed — treat the run as unreliable.
+
+        Zero located facts means the cited pass produced nothing the parser
+        recognised, which is a format-drift bug rather than a document that
+        happens to be sparse.
+        """
+        return self.facts_located == 0 or (self.fields_citable > 0 and self.citation_rate < 40)
+
+    @property
+    def warning(self) -> str | None:
+        if not self.degraded:
+            return None
+        if self.facts_located == 0:
+            return (
+                "The citation pass returned nothing the parser recognised. Every figure "
+                "in this memo is unverified. This indicates a format or API failure, not "
+                "a sparse document — do not rely on this memo."
+            )
+        return (
+            f"Only {self.citation_rate:.0f}% of extracted fields carry a source page "
+            f"(expected >40%). Provenance is substantially incomplete; treat figures as "
+            f"unverified pending review."
+        )
+
+
 class Memo(BaseModel):
     """Sections 1-7 of the house format. Section 7 is not optional.
 
@@ -63,6 +131,7 @@ class Memo(BaseModel):
     unreviewed_fields: list[str] = Field(default_factory=list)
     not_found: list[str] = Field(default_factory=list)
     confidence_note: str = ""
+    health: ExtractionHealth = Field(default_factory=ExtractionHealth)
 
     @property
     def flags_by_severity(self) -> list[RedFlag]:

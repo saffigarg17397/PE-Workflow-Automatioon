@@ -48,8 +48,11 @@ def run(
     progress("ingest", f"done ({doc.page_count}pp)")
 
     progress("extract", "running")
-    profile = extract.run(client, doc.doc)
-    progress("extract", f"done ({len(profile.fields_needing_review())} field(s) for review)")
+    profile, health = extract.run(client, doc.doc)
+    if health.degraded:
+        progress("extract", f"DEGRADED — citation rate {health.citation_rate:.0f}%")
+    else:
+        progress("extract", f"done ({len(profile.fields_needing_review())} field(s) for review)")
 
     progress("analyze", "running")
     rule_flags = rules.run(profile)
@@ -60,11 +63,12 @@ def run(
         # the deterministic findings still stand on their own.
         model_flags = []
     flags = llm_flags.dedupe(rule_flags, model_flags)
+    health.flags_parsed = len(model_flags)
     fit = scoring.run(profile, thesis)
     progress("analyze", f"done ({len(flags)} flag(s), fit {fit.score:.0f}%)")
 
     progress("draft", "running")
-    memo = draft.run(client, doc.doc, profile, fit, flags)
+    memo = draft.run(client, doc.doc, profile, fit, flags, health)
     progress("draft", f"done ({memo.recommendation.value})")
 
     return MemoRun(

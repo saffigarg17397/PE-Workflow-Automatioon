@@ -31,8 +31,13 @@ _VALID_CATEGORIES = {
     "growth": FlagCategory.GROWTH,
 }
 
+# Same emphasis tolerance as the cited-extraction parser — a missed FINDING line
+# silently drops a real risk from the memo.
+_E = r"[*_`]*"
 _FINDING = re.compile(
-    r"FINDING:\s*(?P<title>[^\n|]+)\s*\|\s*CATEGORY:\s*(?P<cat>\w+)\s*\|\s*SEVERITY:\s*(?P<sev>\w+)",
+    rf"{_E}FINDING{_E}:{_E}\s*(?P<title>[^\n|]+?)\s*{_E}\|{_E}\s*"
+    rf"{_E}CATEGORY{_E}:{_E}\s*(?P<cat>\w+)\s*{_E}\|{_E}\s*"
+    rf"{_E}SEVERITY{_E}:{_E}\s*(?P<sev>\w+)",
     re.IGNORECASE,
 )
 

@@ -161,9 +161,15 @@ class DealProfile(BaseModel):
 
     @property
     def addback_pct_of_ebitda(self) -> float | None:
-        """Addbacks as a share of adjusted EBITDA — the QoE aggressiveness proxy."""
+        """Addbacks as a share of adjusted EBITDA — the QoE aggressiveness proxy.
+
+        Undefined when adjusted EBITDA is not positive. Dividing by a negative
+        base yields a negative ratio, which would sail under a `lte 20%`
+        earnings-quality threshold and score a loss-making company as having
+        clean earnings — the exact inversion this metric exists to catch.
+        """
         latest = self.latest_year
-        if not latest or not latest.adjusted_ebitda:
+        if not latest or not latest.adjusted_ebitda or latest.adjusted_ebitda <= 0:
             return None
         total = sum(a.amount for a in (self.addbacks.value or []))
         if total <= 0:

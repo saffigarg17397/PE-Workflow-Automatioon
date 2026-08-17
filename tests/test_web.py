@@ -42,17 +42,20 @@ def seeded():
         return fx.draft_response().content[0].text
 
     db.init_db()
-    with patch.object(
-        LLMClient,
-        "__init__",
-        lambda s, model=None: (
-            setattr(s, "model", "claude-opus-5"),
-            setattr(s, "telemetry", []),
-            None,
-        )[-1],
-    ), patch.object(LLMClient, "extract_structured", fs), patch.object(
-        LLMClient, "extract_cited", fc
-    ), patch.object(LLMClient, "complete", fk):
+    with (
+        patch.object(
+            LLMClient,
+            "__init__",
+            lambda s, model=None: (
+                setattr(s, "model", "claude-opus-5"),
+                setattr(s, "telemetry", []),
+                None,
+            )[-1],
+        ),
+        patch.object(LLMClient, "extract_structured", fs),
+        patch.object(LLMClient, "extract_cited", fc),
+        patch.object(LLMClient, "complete", fk),
+    ):
         run = orchestrator.run("data/sample_cims/brightpath_dental.pdf")
     db.save(run)
     return run
@@ -78,9 +81,9 @@ def test_index_lists_runs_without_detached_orm_error(client, seeded):
 def test_memo_page_renders_citations_and_flag_split(client, seeded):
     r = client.get(f"/memo/{seeded.run_id}")
     assert r.status_code == 200
-    assert "p.11" in r.text                    # inline citation marker
-    assert "Detected by rules" in r.text       # deterministic findings
-    assert "Identified in review" in r.text    # qualitative findings
+    assert "p.11" in r.text  # inline citation marker
+    assert "Detected by rules" in r.text  # deterministic findings
+    assert "Identified in review" in r.text  # qualitative findings
     assert "dealbreaker" in r.text
 
 
@@ -101,7 +104,7 @@ def test_markdown_export(client, seeded):
 def test_docx_export_is_a_real_document(client, seeded):
     r = client.get(f"/export/{seeded.run_id}.docx")
     assert r.status_code == 200
-    assert r.content[:2] == b"PK"      # zip magic — a valid .docx container
+    assert r.content[:2] == b"PK"  # zip magic — a valid .docx container
     assert len(r.content) > 10_000
 
 
