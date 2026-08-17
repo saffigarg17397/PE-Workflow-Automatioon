@@ -2,6 +2,22 @@
 {% block content %}
 <div class="grid md:grid-cols-3 gap-6">
   <section class="md:col-span-1 bg-white rounded-lg border border-slate-200 p-5">
+    {% if demo_mode and not needs_password %}
+      <h2 class="font-semibold text-[#1a2f4b] mb-1">Read-only demo</h2>
+      <p class="text-xs text-slate-600 mb-3">
+        The memos on the right were produced by the real pipeline against the synthetic
+        CIM corpus. Open one to see the full output — inline page citations, the
+        rules-vs-model risk split, the review queue and per-stage cost.
+      </p>
+      <p class="text-xs text-slate-500 mb-4">
+        Live runs are disabled here: the API key lives server-side, so an open
+        run button would let any visitor spend real money. Clone the repo and
+        run <code>make demo</code> to drive it yourself.
+      </p>
+      {% if demo_banner %}
+      <p class="text-xs text-slate-600 border-t border-slate-200 pt-3">{{ demo_banner }}</p>
+      {% endif %}
+    {% else %}
     <h2 class="font-semibold text-[#1a2f4b] mb-1">Screen a CIM</h2>
     <p class="text-xs text-slate-500 mb-4">Takes 40–90 seconds. Cost is reported per run.</p>
     <form hx-post="/run" hx-target="#progress" hx-encoding="multipart/form-data" class="space-y-4">
@@ -25,11 +41,20 @@
           {% endfor %}
         </select>
       </div>
+      {% if needs_password %}
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Run password</label>
+        <input type="password" name="password" autocomplete="off"
+               class="w-full border border-slate-300 rounded px-2 py-1.5 text-sm">
+        <p class="text-[11px] text-slate-400 mt-1">Live runs are gated so visitors can't spend API credits.</p>
+      </div>
+      {% endif %}
       <button class="w-full bg-[#1a2f4b] text-white rounded py-2 text-sm font-medium hover:bg-[#24406a]">
         Generate memo
       </button>
     </form>
     <div id="progress" class="mt-4"></div>
+    {% endif %}
   </section>
 
   <section class="md:col-span-2">

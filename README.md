@@ -87,6 +87,16 @@ make cims   # regenerate PDFs + ground truth
 
 ---
 
+## Hosting a shareable demo
+
+`DEPLOY.md` has the full steps. The short version: generate the memos once
+locally with your key (`make seed`), commit them, and deploy with
+`CIM_DEMO_MODE=true`. The instance then serves real pipeline output read-only —
+instant load, zero cost per visitor, no way for a stranger to spend your API
+credits. Live runs stay available behind a password for interviews.
+
+---
+
 ## Quickstart
 
 ```bash
@@ -104,13 +114,14 @@ make serve                    # http://localhost:8000
 | `make eval` | Score extraction against ground truth *(makes API calls)* |
 | `make sweep` | Effort sweep — accuracy vs. cost per level *(makes API calls)* |
 | `make test` | Full suite, mocked API, no key needed |
+| `make seed` | Run all 5 CIMs and export them as seeds for a hosted demo |
 | `make lint` / `make typecheck` | ruff + mypy |
 
 ---
 
 ## Results
 
-**Test suite:** 118 tests, no API key required, covering the two-pass join, confidence policy, every rule, thesis scoring, memo rendering, the web layer, parser robustness against model format drift, and input safety.
+**Test suite:** 127 tests, no API key required, covering the two-pass join, confidence policy, every rule, thesis scoring, memo rendering, the web layer, parser robustness against model format drift, and input safety.
 
 **Eval scorecard:** `make eval` produces per-document accuracy, coverage, citation rate, and red-flag recall/precision.
 
@@ -172,7 +183,7 @@ app/
 config/thesis/  services_rollup.yaml · software_buyout.yaml
 scripts/        generate_cims.py (PDFs + ground truth) · run_demo.py
 evals/          run_evals.py · ground_truth/
-tests/          118 tests, API mocked
+tests/          127 tests, API mocked
 ```
 
 ---

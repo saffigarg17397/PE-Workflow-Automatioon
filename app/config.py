@@ -25,6 +25,15 @@ class Settings(BaseSettings):
     default_thesis: str = "services_rollup"
     max_upload_mb: int = 32
 
+    # --- public hosting ---
+    # A hosted instance holds the API key server-side, so every visitor who
+    # starts a run spends the owner's money. Demo mode serves pre-generated
+    # memos read-only: full UI, real output, zero marginal cost, no abuse
+    # vector. Set a run password to re-enable live runs for a live audience.
+    demo_mode: bool = False
+    run_password: str = ""
+    demo_banner: str = ""
+
 
 settings = Settings()
 

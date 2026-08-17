@@ -1,4 +1,4 @@
-.PHONY: install cims demo serve test lint typecheck eval sweep clean
+.PHONY: install cims demo seed serve test lint typecheck eval sweep clean
 
 VENV := .venv
 PY := $(VENV)/bin/python
@@ -14,6 +14,9 @@ cims:
 
 demo: cims
 	$(PY) -m scripts.run_demo
+
+seed: cims
+	$(PY) -m scripts.run_demo --all --seed
 
 serve:
 	$(VENV)/bin/uvicorn app.main:app --reload --port 8000

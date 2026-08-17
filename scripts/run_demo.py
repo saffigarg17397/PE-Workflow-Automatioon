@@ -28,6 +28,11 @@ def main() -> int:
     ap.add_argument("cim", nargs="?", help="Path to a CIM PDF (default: the first sample)")
     ap.add_argument("--thesis", default=None, help=f"One of: {', '.join(available_theses())}")
     ap.add_argument("--all", action="store_true", help="Run every sample CIM")
+    ap.add_argument(
+        "--seed",
+        action="store_true",
+        help="Also export each run to data/seed_runs/ for a hosted read-only demo",
+    )
     args = ap.parse_args()
 
     if not os.environ.get("ANTHROPIC_API_KEY"):
@@ -60,6 +65,12 @@ def main() -> int:
 
         out_path = OUT / f"{path.stem}.md"
         out_path.write_text(markdown.render(run))
+
+        if args.seed:
+            from app.storage import seed
+
+            seed_path = seed.export_run(run)
+            print(f"  -> {seed_path.relative_to(ROOT)} (seed)")
 
         m = run.memo
         print(

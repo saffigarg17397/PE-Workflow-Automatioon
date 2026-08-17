@@ -1,0 +1,25 @@
+# Render blueprint. Free tier is enough for a portfolio link — it sleeps after
+# inactivity and takes ~30s to wake, which is acceptable for a demo but worth
+# knowing before you send the link to someone.
+services:
+  - type: web
+    name: cim-ic-memo
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      # Read-only by default: the container would otherwise hold an API key that
+      # any visitor could spend.
+      - key: CIM_DEMO_MODE
+        value: "true"
+      # SQLite on an ephemeral filesystem. Seed runs reload on every boot, so
+      # the demo is always populated; live runs would not survive a restart.
+      - key: CIM_DB_URL
+        value: "sqlite:////tmp/cim_memo.db"
+      # Only needed if you turn live runs on. Set in the dashboard, not here.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CIM_RUN_PASSWORD
+        sync: false
+      - key: CIM_DEMO_BANNER
+        sync: false
