@@ -77,6 +77,27 @@ _TERMINAL_MESSAGES = (
 )
 
 
+def _model_hint(model: str) -> str:
+    """Say which knob is wrong, not just that the id was rejected.
+
+    Distinguishes 'you are pointing a Gemini client at another vendor's model'
+    from 'that Gemini model does not exist', because the fix differs and the
+    first is nearly always a .env left over from before a provider change.
+    """
+    known = ", ".join(sorted(PRICING))
+    if not model.startswith("gemini"):
+        return (
+            f"CIM_MODEL is set to '{model}', which is not a Gemini model.\n"
+            "  This is usually a stale line in .env from an earlier setup.\n"
+            f"  Set it to one of: {known}\n"
+            "  ...or delete the CIM_MODEL line to take the default."
+        )
+    return (
+        f"CIM_MODEL is set to '{model}', which this API version does not serve.\n"
+        f"  Known-good ids: {known}"
+    )
+
+
 def _api_error(stage: str, e: genai_errors.APIError) -> LLMError:
     msg = (getattr(e, "message", "") or str(e)).lower()
     code = getattr(e, "code", None)
@@ -96,6 +117,17 @@ def _api_error(stage: str, e: genai_errors.APIError) -> LLMError:
             "  The free tier allows 1,500 requests/day and 15/minute on Flash.\n"
             "  If this is the per-minute limit, wait sixty seconds and re-run;\n"
             "  the daily limit resets at midnight Pacific.",
+            terminal=True,
+        )
+
+    # A misconfigured model id fails identically on every document, so it must
+    # abort rather than repeat. It is worth its own branch because the message
+    # the API returns ("call ListModels") does not mention the setting that
+    # actually needs changing, and a stale CIM_MODEL in a .env written before a
+    # provider change is the likeliest way to arrive here.
+    if code == 404 or "is not found for api version" in msg:
+        return LLMError(
+            f"{getattr(e, 'message', e)}\n\n  {_model_hint(settings.model)}",
             terminal=True,
         )
 
@@ -184,6 +216,11 @@ class LLMClient:
 
     def _config(self, effort: str, **extra: Any) -> types.GenerateContentConfig:
         return types.GenerateContentConfig(
+            # This pipeline never calls tools. Saying so explicitly stops the SDK
+            # inspecting the Pydantic response schema as a candidate function and
+            # printing an automatic-function-calling advisory on every run — noise
+            # that reads like a warning about your code when it is about neither.
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
             thinking_config=types.ThinkingConfig(
                 thinking_budget=THINKING_BUDGET.get(effort, THINKING_BUDGET["high"])
             ),

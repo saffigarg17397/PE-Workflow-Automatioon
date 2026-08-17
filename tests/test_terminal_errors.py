@@ -116,3 +116,28 @@ def test_run_demo_continues_past_a_per_document_error(monkeypatch, capsys, tmp_p
         rd.main()
 
     assert len(calls) == 5, "all five documents should be attempted"
+
+
+def test_model_not_found_is_terminal_and_names_the_setting():
+    """The reported failure: a stale CIM_MODEL from a previous provider 404'd
+    once per document, five times, and the API's own message pointed at
+    ListModels rather than at the .env line that needed changing."""
+    err = _api_error(
+        "extract_structured",
+        _error("models/some-other-vendor-model is not found for API version v1beta", 404),
+    )
+    assert err.terminal
+    assert "CIM_MODEL" in str(err)
+
+
+def test_non_gemini_model_is_caught_before_any_request(monkeypatch):
+    from app.config import settings
+    from scripts.run_demo import check_model
+
+    monkeypatch.setattr(settings, "model", "claude-opus-5")
+    msg = check_model()
+    assert msg and "not a Gemini model" in msg
+    assert "CIM_MODEL" in msg
+
+    monkeypatch.setattr(settings, "model", "gemini-2.5-flash")
+    assert check_model() is None
