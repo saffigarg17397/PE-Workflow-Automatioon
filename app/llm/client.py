@@ -193,11 +193,35 @@ class CachedDocument:
         )
 
 
+# Transient server-side conditions. 503 ("this model is currently experiencing
+# high demand") is the one that actually bites: a run reaches the draft stage
+# after three successful calls and ~three minutes, then throws all of it away
+# for a condition that clears in seconds. Retrying is not optional at that
+# point — it is the difference between a corpus that completes and one that
+# completes three-fifths of the time.
+#
+# 429 is deliberately included. Free-tier per-minute limits are shared and easy
+# to trip, and waiting is exactly the right response; the daily limit is not
+# recoverable this way, but it exhausts the attempts quickly and then surfaces
+# with its own message.
+_RETRY = types.HttpRetryOptions(
+    attempts=5,
+    initial_delay=2.0,
+    max_delay=60.0,
+    exp_base=2.0,
+    jitter=1.0,
+    http_status_codes=[429, 500, 502, 503, 504],
+)
+
+
 class LLMClient:
     def __init__(self, model: str | None = None) -> None:
         self.model = model or settings.model
         key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-        self._client = genai.Client(api_key=key) if key else genai.Client()
+        http = types.HttpOptions(retry_options=_RETRY)
+        self._client = (
+            genai.Client(api_key=key, http_options=http) if key else genai.Client(http_options=http)
+        )
         self.telemetry: list[StageTelemetry] = []
 
     # ------------------------------------------------------------ internals

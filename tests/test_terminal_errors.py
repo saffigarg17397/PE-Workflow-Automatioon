@@ -8,6 +8,8 @@ you what to do.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from google.genai import errors as genai_errors
 
@@ -162,3 +164,36 @@ def test_the_default_model_is_not_one_we_know_is_closed():
     from app.config import RETIRED_FOR_NEW_KEYS, Settings
 
     assert Settings.model_fields["model"].default not in RETIRED_FOR_NEW_KEYS
+
+
+def test_resume_skips_documents_that_already_have_seeds(monkeypatch, capsys, tmp_path):
+    """A transient 503 three minutes into a document killed the batch mid-corpus.
+    Re-running everything costs minutes and quota to rebuild artifacts that are
+    already on disk."""
+    from unittest.mock import patch
+
+    import scripts.run_demo as rd
+    from app.storage import seed as seed_store
+
+    seeded = tmp_path / "seeds"
+    seeded.mkdir()
+    for name in ("atlas_bookkeeping", "brightpath_dental", "meridian_hvac"):
+        (seeded / f"{name}.json").write_text("{}")
+
+    calls: list[str] = []
+
+    def record(path, thesis=None, on_progress=None):
+        calls.append(Path(path).stem)
+        raise LLMError("stop here")
+
+    monkeypatch.setenv("GEMINI_API_KEY", "AIzaFAKE")
+    monkeypatch.setattr(seed_store, "SEED_DIR", seeded)
+    monkeypatch.setattr(rd, "OUT", tmp_path / "memos")
+    with (
+        patch.object(rd.orchestrator, "run", record),
+        patch.object(rd.sys, "argv", ["run_demo", "--all", "--seed", "--resume"]),
+    ):
+        rd.main()
+
+    assert set(calls) == {"northgate_msp", "verdant_landscaping"}
+    assert "skipping 3 already seeded" in capsys.readouterr().out

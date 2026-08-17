@@ -104,6 +104,11 @@ def main() -> int:
         action="store_true",
         help="Also export each run to data/seed_runs/ for a hosted read-only demo",
     )
+    ap.add_argument(
+        "--resume",
+        action="store_true",
+        help="Skip documents that already have a seed file (use after a partial run)",
+    )
     args = ap.parse_args()
 
     if err := check_api_key():
@@ -122,6 +127,25 @@ def main() -> int:
     targets = samples if args.all else [Path(args.cim) if args.cim else samples[0]]
     OUT.mkdir(parents=True, exist_ok=True)
     failures = 0
+
+    # Each document is four calls and roughly three minutes. When a run dies
+    # partway through the corpus — which a transient 503 will do — repeating the
+    # documents that already succeeded costs minutes and burns quota to produce
+    # artifacts that already exist on disk.
+    if args.resume:
+        from app.storage import seed as seed_store
+
+        done = {p.stem for p in seed_store.SEED_DIR.glob("*.json")}
+        skipped = [p for p in targets if p.stem in done]
+        targets = [p for p in targets if p.stem not in done]
+        if skipped:
+            print(
+                f"Resuming — skipping {len(skipped)} already seeded: "
+                f"{', '.join(p.stem for p in skipped)}"
+            )
+        if not targets:
+            print("Nothing left to run.")
+            return 0
 
     for path in targets:
         print(f"\n{path.name}")

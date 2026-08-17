@@ -1,4 +1,4 @@
-.PHONY: install cims demo seed seed-one serve test lint typecheck eval eval-seeds sweep clean
+.PHONY: install cims demo seed seed-one seed-resume serve test lint typecheck eval eval-seeds sweep clean
 
 VENV := .venv
 PY := $(VENV)/bin/python
@@ -24,6 +24,11 @@ demo: cims
 
 seed: cims
 	$(PY) -m scripts.run_demo --all --seed
+
+# Finish a corpus that died partway through — a transient 503 three minutes
+# into a document will do that. Skips anything already seeded.
+seed-resume: cims
+	$(PY) -m scripts.run_demo --all --seed --resume
 
 # Cheapest path to a populated hosted demo: one document instead of five.
 # Northgate is the one to pick if you only run one — its planted defect is
