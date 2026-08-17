@@ -15,6 +15,8 @@ import sys
 import textwrap
 from pathlib import Path
 
+import pytest
+
 REPO = Path(__file__).resolve().parent.parent
 
 PROBE = textwrap.dedent(
@@ -112,20 +114,32 @@ def _check(monkeypatch, key: str | None):
     return check_api_key()
 
 
-def test_valid_key_passes(monkeypatch):
-    assert _check(monkeypatch, "AIzaSyRealLookingKey00000000000000000") is None
+@pytest.mark.parametrize(
+    "key",
+    [
+        "AQ.Ab8RN6JrealLookingAuthKey0000000000",  # current AI Studio format
+        "AIzaSyRealLookingKey00000000000000000",  # legacy standard key
+    ],
+)
+def test_both_google_key_formats_pass(monkeypatch, key):
+    assert _check(monkeypatch, key) is None
+
+
+def test_unrecognised_prefix_warns_but_does_not_block(monkeypatch, capsys):
+    """The regression this guards: the check demanded an 'AIza' prefix and so
+    rejected every key AI Studio issues today, which are 'AQ.' authorization
+    keys. A local guess about key shape must never veto a key the API would
+    have accepted — only the API decides validity.
+    """
+    assert _check(monkeypatch, "zz-some-future-format") is None
+    assert "Trying it anyway" in capsys.readouterr().out
 
 
 def test_unedited_placeholder_is_caught(monkeypatch):
     """Copying .env.example and forgetting to edit it leaves a syntactically
-    fine key that loads cleanly, then 401s partway through a paid run."""
-    msg = _check(monkeypatch, "AIza-your-key-here")
+    fine key that loads cleanly, then fails partway through the corpus."""
+    msg = _check(monkeypatch, "your-key-here")
     assert msg and "placeholder" in msg
-
-
-def test_key_with_wrong_prefix_is_caught(monkeypatch):
-    msg = _check(monkeypatch, "oops-wrong-thing")
-    assert msg and "does not look like a Google AI Studio key" in msg
 
 
 def test_missing_key_is_caught(monkeypatch):

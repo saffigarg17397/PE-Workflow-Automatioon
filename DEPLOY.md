@@ -35,8 +35,13 @@ aren't regenerated per visitor. Live runs stay available behind
 ## Getting a key
 
 aistudio.google.com → **Get API key** → *Create API key*. A Google account is
-all it needs — no card, no phone verification, no billing setup. Keys start with
-`AIza`. Put it in `.env` as `GEMINI_API_KEY=AIza...`.
+all it needs — no card, no phone verification, no billing setup. Put it in `.env`
+as `GEMINI_API_KEY=...`.
+
+Keys come in two shapes and both work: new ones begin `AQ.` (authorization keys,
+what AI Studio issues today) and older ones begin `AIza` (standard keys, being
+retired through 2026). If a third-party tool rejects an `AQ.` key, that tool is
+assuming the legacy format — this pipeline does not.
 
 Generating the full corpus is 20 requests against a 1,500/day allowance, so you
 can regenerate freely while tuning prompts. `make seed-one` runs a single
@@ -129,7 +134,7 @@ is the thing worth showing.
 ```bash
 # in the host's dashboard
 CIM_RUN_PASSWORD=<something>
-GEMINI_API_KEY=AIza...
+GEMINI_API_KEY=AQ....
 ```
 
 The run form reappears with a password field. You can drive a live run while

@@ -85,7 +85,8 @@ def _api_error(stage: str, e: genai_errors.APIError) -> LLMError:
         return LLMError(
             "GEMINI_API_KEY is not valid.\n\n"
             "  Get one at aistudio.google.com -> Get API key, and put it in .env as\n"
-            "    GEMINI_API_KEY=AIza...",
+            "    GEMINI_API_KEY=<the key>\n"
+            "  Both the newer 'AQ.' and legacy 'AIza' formats are accepted here.",
             terminal=True,
         )
 

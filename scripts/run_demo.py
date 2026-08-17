@@ -18,23 +18,33 @@ from app.pipeline import orchestrator  # noqa: E402
 OUT = ROOT / "data" / "memos"
 
 
-def check_api_key() -> str | None:
-    """Return an actionable message if the key is missing or unusable.
+# Google issues two key formats. `AQ.` is the current one — authorization keys
+# bound to a service account, which AI Studio now hands out by default. `AIza`
+# is the legacy standard-key format, being retired through 2026.
+#
+# This list is advisory, never a gate. An earlier version rejected anything that
+# was not `AIza`, which blocked every key issued by AI Studio today: a local
+# guess about key shape had veto power over a key the API would have accepted.
+# Format checks age badly, so they warn; only the API decides validity.
+_KNOWN_PREFIXES = ("AQ.", "AIza")
 
-    The placeholder check matters more than the missing check: copying
-    .env.example and forgetting to edit it leaves a syntactically fine key that
-    loads cleanly and then fails as a 400 partway through the corpus. Catching
-    it here costs nothing and saves a confusing mid-flight failure.
+
+def check_api_key() -> str | None:
+    """Return an actionable message only when the key is definitely unusable.
+
+    Definitely unusable means absent, or the literal placeholder from
+    .env.example — copying that file and forgetting to edit it leaves a
+    syntactically fine key that loads cleanly and then fails partway through the
+    corpus. Anything else is passed through to the API to judge.
     """
     key = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
     env_file = ROOT / ".env"
 
     if key and "your-key-here" not in key:
-        if not key.startswith("AIza"):
-            return (
-                f"GEMINI_API_KEY does not look like a Google AI Studio key "
-                f"(expected it to start with 'AIza', got '{key[:8]}...').\n"
-                "  Check you copied the whole key from aistudio.google.com -> Get API key."
+        if not key.startswith(_KNOWN_PREFIXES):
+            print(
+                f"  note: key starts with '{key[:4]}...', which is neither of the formats "
+                f"this script knows ({', '.join(_KNOWN_PREFIXES)}). Trying it anyway."
             )
         return None
 
@@ -49,16 +59,16 @@ def check_api_key() -> str | None:
         return (
             "GEMINI_API_KEY is not set.\n\n"
             "  cp .env.example .env      # then put your key in it\n"
-            "  ...or: export GEMINI_API_KEY=AIza..."
+            "  ...or: export GEMINI_API_KEY=..."
         )
 
     return (
         f"GEMINI_API_KEY is not set, though {env_file.name} exists.\n\n"
         "  Check the file contains a line reading:\n"
-        "    GEMINI_API_KEY=AIza...\n"
+        "    GEMINI_API_KEY=AQ....\n"
         "  with no leading '#'.\n\n"
         "  Or set it for this shell only:\n"
-        "    export GEMINI_API_KEY=AIza..."
+        "    export GEMINI_API_KEY=..."
     )
 
 
