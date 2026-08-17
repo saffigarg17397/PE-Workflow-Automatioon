@@ -18,6 +18,50 @@ from app.pipeline import orchestrator  # noqa: E402
 OUT = ROOT / "data" / "memos"
 
 
+def check_api_key() -> str | None:
+    """Return an actionable message if the key is missing or unusable.
+
+    The placeholder check matters more than the missing check: copying
+    .env.example and forgetting to edit it leaves a syntactically fine key that
+    loads cleanly and then fails as a 401 partway through a paid run. Catching
+    it here costs nothing and saves a confusing mid-flight failure.
+    """
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    env_file = ROOT / ".env"
+
+    if key and "your-key-here" not in key:
+        if not key.startswith("sk-ant-"):
+            return (
+                f"ANTHROPIC_API_KEY does not look like an Anthropic key "
+                f"(expected it to start with 'sk-ant-', got '{key[:8]}...').\n"
+                "  Check you copied the whole key from console.anthropic.com."
+            )
+        return None
+
+    if key:
+        return (
+            f"ANTHROPIC_API_KEY is still the placeholder from .env.example.\n\n"
+            f"  Open {env_file.name} and replace 'sk-ant-your-key-here' with your real key\n"
+            "  from console.anthropic.com -> API Keys."
+        )
+
+    if not env_file.exists():
+        return (
+            "ANTHROPIC_API_KEY is not set.\n\n"
+            "  cp .env.example .env      # then put your key in it\n"
+            "  ...or: export ANTHROPIC_API_KEY=sk-ant-..."
+        )
+
+    return (
+        f"ANTHROPIC_API_KEY is not set, though {env_file.name} exists.\n\n"
+        "  Check the file contains a line reading:\n"
+        "    ANTHROPIC_API_KEY=sk-ant-...\n"
+        "  with no leading '#'.\n\n"
+        "  Or set it for this shell only:\n"
+        "    export ANTHROPIC_API_KEY=sk-ant-..."
+    )
+
+
 def progress(stage: str, status: str) -> None:
     icon = "..." if status == "running" else " ok"
     print(f"  [{icon}] {stage:<10} {status if status != 'running' else ''}".rstrip())
@@ -35,10 +79,8 @@ def main() -> int:
     )
     args = ap.parse_args()
 
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        print("ANTHROPIC_API_KEY is not set.\n")
-        print("  cp .env.example .env   # then add your key")
-        print("  export ANTHROPIC_API_KEY=sk-ant-...")
+    if err := check_api_key():
+        print(err)
         return 1
 
     samples = sorted(SAMPLE_CIMS.glob("*.pdf"))

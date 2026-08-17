@@ -8,8 +8,24 @@ stages where a mistake is expensive, so they run high.
 from pathlib import Path
 
 import yaml
+from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Load .env into the process environment before anything reads it.
+#
+# pydantic-settings' own `env_file` only populates this Settings model's
+# CIM_-prefixed fields — it does not export anything to os.environ. But
+# ANTHROPIC_API_KEY is read from os.environ by the Anthropic SDK, not by
+# Settings, so without this a key sitting in .env is silently ignored and the
+# pipeline reports "ANTHROPIC_API_KEY is not set" while the file plainly
+# contains it. `override=False` keeps an explicitly exported key winning over
+# the file, which is what someone switching keys expects.
+_ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(_ENV_FILE, override=False)
+# Also try the usual cwd-upward search, so a key still resolves when the app is
+# invoked from outside the repo (e.g. an installed console script).
+load_dotenv(override=False)
 
 ROOT = Path(__file__).resolve().parent.parent
 PROMPTS_DIR = Path(__file__).resolve().parent / "llm" / "prompts"
