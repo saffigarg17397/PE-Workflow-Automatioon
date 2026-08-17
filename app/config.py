@@ -36,7 +36,7 @@ SAMPLE_CIMS = ROOT / "data" / "sample_cims"
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="CIM_", env_file=".env", extra="ignore")
 
-    model: str = "gemini-2.5-flash"
+    model: str = "gemini-3.6-flash"
     db_url: str = "sqlite:///./cim_memo.db"
     default_thesis: str = "services_rollup"
     max_upload_mb: int = 32
@@ -79,11 +79,26 @@ THINKING_BUDGET: dict[str, int] = {
 # USD per million tokens. Free-tier keys are billed at zero regardless; these
 # exist so the telemetry reports what the same run *would* cost on a paid key,
 # which is the number worth quoting to someone evaluating the tool.
+#
+# 3.6 rates are Google's introductory pricing, which runs to 31 Dec 2026 and
+# then roughly doubles ($1.50 / $7.50). The reported cost of a run is therefore
+# a floor, not a forecast — worth knowing before quoting it as a per-memo cost.
+# The 2.5 family is kept because existing keys can still call it; new keys
+# cannot, which is why it is no longer the default.
 PRICING: dict[str, dict[str, float]] = {
+    "gemini-3.6-flash": {"input": 0.75, "output": 3.75},
     "gemini-2.5-flash": {"input": 0.30, "output": 2.50},
     "gemini-2.5-flash-lite": {"input": 0.10, "output": 0.40},
     "gemini-2.5-pro": {"input": 1.25, "output": 10.00},
 }
+
+# Ids Google still prices and still serves to keys that already used them, but
+# refuses to new ones. Worth naming rather than leaving to a runtime 404,
+# because "no longer available to new users" is an unusual failure: the id is
+# real, the docs describe it, and it works on someone else's machine.
+RETIRED_FOR_NEW_KEYS: frozenset[str] = frozenset(
+    {"gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"}
+)
 
 
 def price_call(
@@ -93,7 +108,7 @@ def price_call(
     cache_read: int = 0,
     cache_write: int = 0,
 ) -> float:
-    p = PRICING.get(model, PRICING["gemini-2.5-flash"])
+    p = PRICING.get(model, PRICING["gemini-3.6-flash"])
     return round(
         (
             input_tokens * p["input"]

@@ -75,23 +75,18 @@ def check_api_key() -> str | None:
 def check_model() -> str | None:
     """Catch a model id this client cannot serve before spending a request.
 
-    The case worth pre-empting: a `.env` written before the provider change
-    still sets CIM_MODEL to another vendor's model. The API's own 404 says only
-    'call ListModels', which does not point at the file that needs editing, and
-    it arrives one document into the run rather than before it.
+    The cases worth pre-empting: a `.env` written before the provider change
+    still names another vendor's model, or names a Gemini model Google has since
+    closed to new keys. The API's own 404 says only "call ListModels", which
+    points at neither the setting nor the file that needs editing, and it
+    arrives one document into the run rather than before it.
     """
-    from app.config import PRICING, settings
+    from app.config import RETIRED_FOR_NEW_KEYS, settings
+    from app.llm.client import _model_hint
 
-    if settings.model.startswith("gemini"):
+    if settings.model.startswith("gemini") and settings.model not in RETIRED_FOR_NEW_KEYS:
         return None
-    return (
-        f"CIM_MODEL is set to '{settings.model}', which is not a Gemini model.\n\n"
-        f"  This pipeline talks to Google AI Studio. If you have a .env from an\n"
-        f"  earlier setup, that line is stale.\n\n"
-        f"  Open .env and set:\n"
-        f"    CIM_MODEL={next(iter(PRICING))}\n"
-        f"  ...or delete the CIM_MODEL line entirely to take the default."
-    )
+    return _model_hint(settings.model)
 
 
 def progress(stage: str, status: str) -> None:

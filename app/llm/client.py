@@ -20,7 +20,7 @@ Anthropic:
     because it has to name page numbers. Same document, two views, joined
     downstream.
 
-Caching is implicit on the 2.5 models — repeated prefixes are discounted
+Caching is implicit on the current models — repeated prefixes are discounted
 automatically, and `cache_read_tokens` in the telemetry reports what was hit.
 There is no explicit cache resource to manage.
 """
@@ -38,7 +38,15 @@ from google.genai import types
 from pydantic import BaseModel
 from pypdf import PdfReader
 
-from app.config import PRICING, STAGE_EFFORT, THINKING_BUDGET, price_call, settings
+from app.config import (
+    PRICING,
+    RETIRED_FOR_NEW_KEYS,
+    STAGE_EFFORT,
+    THINKING_BUDGET,
+    Settings,
+    price_call,
+    settings,
+)
 from app.models.memo import StageTelemetry
 
 T = TypeVar("T", bound=BaseModel)
@@ -80,22 +88,28 @@ _TERMINAL_MESSAGES = (
 def _model_hint(model: str) -> str:
     """Say which knob is wrong, not just that the id was rejected.
 
-    Distinguishes 'you are pointing a Gemini client at another vendor's model'
-    from 'that Gemini model does not exist', because the fix differs and the
-    first is nearly always a .env left over from before a provider change.
+    Three distinct causes land on the same status code and the fix differs for
+    each: another vendor's model left in .env, a model Google has closed to new
+    keys, and a plain typo. The default id is quoted rather than a menu, because
+    the useful answer here is one line to paste.
     """
-    known = ", ".join(sorted(PRICING))
+    default = Settings.model_fields["model"].default
+    fix = (
+        f"  Set it to:\n    CIM_MODEL={default}\n"
+        "  ...or delete the CIM_MODEL line entirely to take the default."
+    )
     if not model.startswith("gemini"):
         return (
             f"CIM_MODEL is set to '{model}', which is not a Gemini model.\n"
-            "  This is usually a stale line in .env from an earlier setup.\n"
-            f"  Set it to one of: {known}\n"
-            "  ...or delete the CIM_MODEL line to take the default."
+            f"  This is usually a stale line in .env from an earlier setup.\n{fix}"
         )
-    return (
-        f"CIM_MODEL is set to '{model}', which this API version does not serve.\n"
-        f"  Known-good ids: {known}"
-    )
+    if model in RETIRED_FOR_NEW_KEYS:
+        return (
+            f"CIM_MODEL is set to '{model}', which Google has closed to new API keys.\n"
+            f"  The id is still real and still documented — it just won't serve a key\n"
+            f"  created after the cutoff, which is why this works elsewhere.\n{fix}"
+        )
+    return f"CIM_MODEL is set to '{model}', which this API version does not serve.\n{fix}"
 
 
 def _api_error(stage: str, e: genai_errors.APIError) -> LLMError:

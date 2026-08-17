@@ -34,7 +34,7 @@ def _run_with(cited_response):
             LLMClient,
             "__init__",
             lambda s, model=None: (
-                setattr(s, "model", "gemini-2.5-flash"),
+                setattr(s, "model", "gemini-3.6-flash"),
                 setattr(s, "telemetry", []),
                 None,
             )[-1],

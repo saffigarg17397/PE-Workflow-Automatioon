@@ -131,7 +131,7 @@ def test_model_not_found_is_terminal_and_names_the_setting():
 
 
 def test_non_gemini_model_is_caught_before_any_request(monkeypatch):
-    from app.config import settings
+    from app.config import Settings, settings
     from scripts.run_demo import check_model
 
     monkeypatch.setattr(settings, "model", "claude-opus-5")
@@ -139,5 +139,26 @@ def test_non_gemini_model_is_caught_before_any_request(monkeypatch):
     assert msg and "not a Gemini model" in msg
     assert "CIM_MODEL" in msg
 
-    monkeypatch.setattr(settings, "model", "gemini-2.5-flash")
+    monkeypatch.setattr(settings, "model", Settings.model_fields["model"].default)
     assert check_model() is None
+
+
+def test_model_closed_to_new_keys_is_caught_before_any_request(monkeypatch):
+    """Google still prices and documents 2.5 Flash, and it still serves keys
+    that used it before the cutoff — so it fails only for new keys, and only at
+    request time. Naming it up front beats a 404 that says 'call ListModels'.
+    """
+    from app.config import settings
+    from scripts.run_demo import check_model
+
+    monkeypatch.setattr(settings, "model", "gemini-2.5-flash")
+    msg = check_model()
+    assert msg and "closed to new API keys" in msg
+    assert "CIM_MODEL=gemini-3.6-flash" in msg
+
+
+def test_the_default_model_is_not_one_we_know_is_closed():
+    """A default that cannot serve a new key makes first-run failure the norm."""
+    from app.config import RETIRED_FOR_NEW_KEYS, Settings
+
+    assert Settings.model_fields["model"].default not in RETIRED_FOR_NEW_KEYS
