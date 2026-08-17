@@ -23,18 +23,18 @@ def _run_with(cited_response):
 
     def fc(self, s, d, p):
         self._record(s, "high", fx.FakeUsage(), 100)
-        return cited_response if s == "extract_cited" else fx.brightpath_flags_response()
+        return cited_response if s == "extract_cited" else fx.brightpath_flags_text()
 
     def fk(self, s, d, p, max_tokens=16000):
         self._record(s, "high", fx.FakeUsage(), 100)
-        return fx.draft_response().content[0].text
+        return fx.draft_text()
 
     with (
         patch.object(
             LLMClient,
             "__init__",
             lambda s, model=None: (
-                setattr(s, "model", "claude-opus-5"),
+                setattr(s, "model", "gemini-2.5-flash"),
                 setattr(s, "telemetry", []),
                 None,
             )[-1],
@@ -47,7 +47,7 @@ def _run_with(cited_response):
 
 
 def test_healthy_run_is_not_degraded():
-    run = _run_with(fx.brightpath_cited_response())
+    run = _run_with(fx.brightpath_cited_text())
     h = run.memo.health
     assert not h.degraded
     assert h.warning is None
@@ -61,9 +61,7 @@ def test_healthy_run_is_not_degraded():
 def test_total_parser_failure_is_flagged_degraded():
     """The cited pass returns prose instead of the requested format — the exact
     silent-degradation case."""
-    prose = fx.FakeResponse(
-        content=[fx.FakeTextBlock(text="I reviewed the document but could not format a response.")]
-    )
+    prose = "I reviewed the document but could not format a response."
     run = _run_with(prose)
     h = run.memo.health
 
@@ -76,16 +74,14 @@ def test_total_parser_failure_is_flagged_degraded():
 
 def test_partial_citation_collapse_is_flagged():
     """Values extract fine but almost none carry a source page."""
-    thin = fx.FakeResponse(
-        content=[fx.FakeTextBlock(text="FIELD: company_name | VALUE: BrightPath Dental Partners")]
-    )
+    thin = "FIELD: company_name | VALUE: BrightPath Dental Partners"
     run = _run_with(thin)
     assert run.memo.health.degraded
     assert "carry a source page" in run.memo.health.warning
 
 
 def test_health_counts_are_consistent():
-    run = _run_with(fx.brightpath_cited_response())
+    run = _run_with(fx.brightpath_cited_text())
     h = run.memo.health
     assert h.fields_cited <= h.fields_citable <= h.fields_extracted <= h.fields_total
     assert h.flags_parsed == 2  # from the fixture
@@ -110,14 +106,14 @@ def test_empty_health_reports_degraded_not_crash():
 
 
 def test_health_appears_in_section_seven():
-    run = _run_with(fx.brightpath_cited_response())
+    run = _run_with(fx.brightpath_cited_text())
     md = markdown.render(run)
     assert "Extraction health:" in md
     assert "located by the citation pass" in md
 
 
 def test_health_of_is_pure_and_matches_profile():
-    facts = extract.parse_cited_response(fx.brightpath_cited_response())
+    facts = extract.parse_cited_response(fx.brightpath_cited_text(), fx.brightpath_pages())
     profile = extract.build_profile(fx.brightpath_raw(), facts)
     h = extract.health_of(profile, facts)
     cited = sum(

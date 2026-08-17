@@ -1,9 +1,16 @@
-"""Two-pass extraction and the join between them.
+"""Two-pass extraction, the join between them, and local citation verification.
 
-Pass 1 (`extract_structured`) fills a typed schema — accurate values, no
-provenance. Pass 2 (`extract_cited`) locates source passages with the API's
-native citations — provenance, but free text. Neither alone is sufficient: the
-API rejects `citations` and `output_config.format` on the same request.
+Pass 1 (`extract_structured`) fills a typed schema from the PDF — accurate
+values, no provenance. Pass 2 (`extract_cited`) reads page-numbered text and
+reports, per field, a page number and a verbatim quote — an *assertion* of
+provenance.
+
+The assertion is not trusted. Every quote is matched against the actual text of
+the page it names before it is allowed to become a `Citation`; a quote that
+cannot be found is discarded and the field is reported as unverified. This is
+the core of the tool: provenance is something this code checks, not something a
+model promises or a vendor annotates. It also means a `Citation` anywhere in the
+system is one that was verified, so downstream code never has to ask.
 
 The join is by field name, which is why `CITED_FIELDS` and the prompt in
 `extract_cited.md` must agree. That coupling is the cost of the split, and it's
@@ -50,12 +57,25 @@ CITED_FIELDS: dict[str, str] = {
 # italicise `FIELD:` / `VALUE:` even when the prompt shows them plain, and a
 # parser that misses those lines silently drops every citation — which would
 # degrade the whole document to LOW confidence with no visible error.
-# `E` absorbs markdown emphasis wherever it lands — models write `**FIELD:**`,
+# `_E` absorbs emphasis wherever it lands — models write `**FIELD:**`,
 # `**FIELD**:`, and `- FIELD:` interchangeably, and the colon may sit inside or
 # outside the emphasis.
 _E = r"[*_`]*"
+
+
+def _label(name: str) -> str:
+    return rf"{_E}{name}{_E}:{_E}\s*"
+
+
+# PAGE and QUOTE are optional so that a NOT_FOUND line still parses as a
+# deliberate "the document is silent" answer rather than as unrecognised noise —
+# the two are very different signals for ExtractionHealth.
 _FIELD_LINE = re.compile(
-    rf"{_E}FIELD{_E}:{_E}\s*(\w+)\s*{_E}\|{_E}\s*{_E}VALUE{_E}:{_E}\s*([^|\n]*)",
+    _label("FIELD") + r"(\w+)\s*" + _E + r"\|" + _E + r"\s*"
+    r"" + _label("VALUE") + r"([^|\n]*)"
+    r"(?:" + _E + r"\|" + _E + r"\s*" + _label("PAGE") + r"(\d+)\s*"
+    r"(?:" + _E + r"\|" + _E + r"\s*" + _label("QUOTE") + r"([^\n]*))?"
+    r")?",
     re.IGNORECASE,
 )
 
@@ -77,18 +97,114 @@ _NULL_VALUES = {
 
 _NUMBER = re.compile(r"-?\d[\d,]*\.?\d*")
 
+# A quote shorter than this carries no evidential weight — "revenue" appears on
+# every page of a CIM, so matching it proves nothing. Rejecting short quotes is
+# what stops the verifier from rubber-stamping a citation that happens to hit.
+_MIN_QUOTE_TOKENS = 4
+
+# Progressive truncations tried when the full quote does not match. Models
+# reliably copy the start of a passage and then drift — paraphrasing the tail,
+# merging a following clause, or running past a line break. Matching a prefix
+# still proves the passage exists on that page, which is the claim being
+# checked; anything shorter than _MIN_QUOTE_TOKENS is never tried.
+_PREFIX_LENGTHS = (16, 10, 6)
+
+
+def _norm(s: str) -> str:
+    """Collapse to comparable text.
+
+    PDF extraction inserts spurious line breaks, splits ligatures and drops
+    punctuation inconsistently, so a literal comparison fails on quotes that are
+    in fact verbatim. Reducing both sides to lowercase alphanumeric words
+    removes exactly the noise the extractor introduces while preserving the word
+    sequence, which is the part that would have to be invented to fake a quote.
+    """
+    return re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
+
+
+class QuoteVerifier:
+    """Checks quoted passages against the document they claim to come from.
+
+    Normalised page text is computed once per document: verification runs for
+    every field, and re-normalising a 21-page CIM each time would dominate the
+    cost of the whole join.
+    """
+
+    def __init__(self, page_text: list[str]) -> None:
+        self._pages = [_norm(t) for t in page_text]
+
+    @property
+    def page_count(self) -> int:
+        return len(self._pages)
+
+    def locate(self, quote: str, claimed_page: int | None) -> int | None:
+        """Return the 1-indexed page the quote really appears on, or None.
+
+        The page the model named is tried first, but every other page is tried
+        too. A correct quote reported against the wrong page is a citation with
+        a typo, not a fabrication — repairing it silently is right, because the
+        reviewer clicking through lands on the passage either way. A quote found
+        nowhere is the case that matters, and it returns None.
+        """
+        tokens = _norm(quote).split()
+        if len(tokens) < _MIN_QUOTE_TOKENS:
+            return None
+
+        order = list(range(1, len(self._pages) + 1))
+        if claimed_page and 1 <= claimed_page <= len(self._pages):
+            order.remove(claimed_page)
+            order.insert(0, claimed_page)
+
+        for length in (len(tokens), *_PREFIX_LENGTHS):
+            if length < _MIN_QUOTE_TOKENS or length > len(tokens):
+                continue
+            probe = " ".join(tokens[:length])
+            for page in order:
+                if probe in self._pages[page - 1]:
+                    return page
+        return None
+
 
 class CitedFact:
-    """One field located by the cited pass."""
+    """One field the cited pass reported, and what verification made of it."""
 
-    def __init__(self, field: str, value: str, citations: list[Citation]) -> None:
+    def __init__(
+        self,
+        field: str,
+        value: str,
+        *,
+        claimed_page: int | None = None,
+        claimed_quote: str = "",
+        verifier: QuoteVerifier | None = None,
+    ) -> None:
         self.field = field
         self.raw_value = value.strip().strip("*_`").strip()
-        self.citations = citations
+        self.claimed_page = claimed_page
+        self.claimed_quote = claimed_quote.strip().strip("*_`").strip()
+        self.citations: list[Citation] = []
+        self.rejected_quote = False
+
+        if not self.found or not self.claimed_quote or verifier is None:
+            return
+
+        page = verifier.locate(self.claimed_quote, claimed_page)
+        if page is None:
+            # The evidence does not exist in the document. The value survives —
+            # the structured pass may well be right — but it is now an uncited
+            # value, and the rejection is counted so a document full of them
+            # trips the degradation warning.
+            self.rejected_quote = True
+            return
+        self.citations = [Citation(page=page, quote=self.claimed_quote[:600])]
 
     @property
     def found(self) -> bool:
         return bool(self.raw_value) and self.raw_value.lower() not in _NULL_VALUES
+
+    @property
+    def page_corrected(self) -> bool:
+        """The quote checked out, but not on the page the model named."""
+        return bool(self.citations) and self.claimed_page != self.citations[0].page
 
     @property
     def is_ambiguous(self) -> bool:
@@ -111,60 +227,23 @@ class CitedFact:
             return None
 
 
-def _citations_from_block(block: Any) -> list[Citation]:
-    """Pull page-located citations off one response content block.
-
-    The API returns `page_location` for PDF sources with 1-indexed
-    start/end page numbers plus the cited span. We take it as-is rather than
-    reconstructing spans — the model-reported span is what it actually
-    conditioned on, which is the thing worth showing a reviewer.
-    """
-    out: list[Citation] = []
-    for c in getattr(block, "citations", None) or []:
-        if getattr(c, "type", None) != "page_location":
-            continue
-        start = getattr(c, "start_page_number", None)
-        if start is None:
-            continue
-        end = getattr(c, "end_page_number", None)
-        out.append(
-            Citation(
-                page=int(start),
-                quote=(getattr(c, "cited_text", "") or "").strip()[:600],
-                end_page=int(end) if end and int(end) != int(start) else None,
-            )
-        )
-    return out
-
-
-def parse_cited_response(resp: Any) -> dict[str, CitedFact]:
-    """Walk the response, attaching each block's citations to the field named on
-    the most recent FIELD: line.
-
-    The model emits one line per field; citations arrive attached to the text
-    blocks covering those lines. Blocks do not align 1:1 with lines, so we track
-    the current field as we scan and accumulate citations onto it.
-    """
+def parse_cited_response(text: str, page_text: list[str]) -> dict[str, CitedFact]:
+    """Parse the cited pass's lines and verify every quote as we go."""
+    verifier = QuoteVerifier(page_text)
     facts: dict[str, CitedFact] = {}
-    current: str | None = None
 
-    for block in resp.content:
-        if getattr(block, "type", None) != "text":
+    for m in _FIELD_LINE.finditer(text):
+        name = m.group(1).strip().lower()
+        if name not in CITED_FIELDS:
             continue
-        text = block.text
-        block_cites = _citations_from_block(block)
-
-        matches = list(_FIELD_LINE.finditer(text))
-        if matches:
-            for m in matches:
-                name = m.group(1).strip().lower()
-                value = m.group(2).strip()
-                if name in CITED_FIELDS:
-                    facts[name] = CitedFact(name, value, list(block_cites))
-                    current = name
-        elif current and block_cites:
-            # Continuation block — the quote for the field named earlier.
-            facts[current].citations.extend(block_cites)
+        page_raw = m.group(3)
+        facts[name] = CitedFact(
+            name,
+            m.group(2).strip(),
+            claimed_page=int(page_raw) if page_raw else None,
+            claimed_quote=m.group(4) or "",
+            verifier=verifier,
+        )
 
     return facts
 
@@ -182,9 +261,9 @@ def _resolve(
     """Join one field across the two passes.
 
     Returns (value, citations, confidence, note). Confidence policy:
-      HIGH   — structured value present, cited, and the two agree
-      MEDIUM — structured value present and cited, but values disagree
-      LOW    — value present but uncited, or missing entirely
+      HIGH   — structured value present, quote verified, and the two agree
+      MEDIUM — verified but the values disagree, or the passage is ambiguous
+      LOW    — value present but unverified, or missing entirely
     """
     # Structured-side value
     if field == "latest_revenue":
@@ -202,13 +281,21 @@ def _resolve(
     if value is None:
         return None, [], Confidence.LOW, "Not found by structured extraction"
     if fact is None or not fact.found or not fact.citations:
-        # The cited pass either couldn't find the field or named a value without
-        # attaching a source span. Either way the value is unverified: keep it
-        # (the structured pass is schema-valid) but never let it reach a memo
-        # as an established figure.
-        return value, [], Confidence.LOW, "Extracted but no supporting citation located"
+        # Either the cited pass couldn't find the field, or it offered a quote
+        # that verification rejected. Keep the value (the structured pass is
+        # schema-valid) but never let it reach a memo as an established figure —
+        # and say which of the two happened, because they mean different things
+        # to whoever picks this up in review.
+        if fact is not None and fact.rejected_quote:
+            reason = (
+                f"Citation rejected: the supporting quote was not found in the document "
+                f"(model cited p.{fact.claimed_page})"
+            )
+        else:
+            reason = "Extracted but no supporting citation located"
+        return value, [], Confidence.LOW, reason
 
-    # Both passes produced something — do they agree?
+    # Both passes produced something, and the evidence checks out — do they agree?
     note: str | None = None
     conf = Confidence.HIGH
     if fact.is_ambiguous:
@@ -224,6 +311,9 @@ def _resolve(
             if drift > 0.02:
                 conf = Confidence.MEDIUM
                 note = f"Passes disagree: structured={value}, cited={cited_val}"
+
+    if fact.page_corrected and note is None:
+        note = f"Quote verified on p.{fact.citations[0].page}; model reported p.{fact.claimed_page}"
     return value, fact.citations, conf, note
 
 
@@ -314,15 +404,16 @@ def health_of(profile: DealProfile, facts: dict[str, CitedFact]) -> ExtractionHe
         fields_citable=len(citable),
         fields_cited=sum(1 for n in citable if getattr(profile, n).citations),
         facts_located=sum(1 for f in facts.values() if f.found),
+        quotes_rejected=sum(1 for f in facts.values() if f.rejected_quote),
     )
 
 
 def run(client: LLMClient, doc: CachedDocument) -> tuple[DealProfile, ExtractionHealth]:
-    """Both passes, joined, plus a health signal for the join itself."""
+    """Both passes, joined and verified, plus a health signal for the join itself."""
     raw = client.extract_structured(
         "extract_structured", doc, load_prompt("extract_structured"), DealProfileRaw
     )
-    cited_resp = client.extract_cited("extract_cited", doc, load_prompt("extract_cited"))
-    facts = parse_cited_response(cited_resp)
+    cited_text = client.extract_cited("extract_cited", doc, load_prompt("extract_cited"))
+    facts = parse_cited_response(cited_text, doc.page_text)
     profile = build_profile(raw, facts)
     return profile, health_of(profile, facts)

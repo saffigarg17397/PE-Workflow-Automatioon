@@ -157,8 +157,8 @@ def main() -> int:
     ap.add_argument("--thesis", default=None)
     args = ap.parse_args()
 
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        print("ANTHROPIC_API_KEY is not set — the sweep makes real API calls.")
+    if not (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")):
+        print("GEMINI_API_KEY is not set — the sweep makes real API calls.")
         return 1
 
     slugs = [args.only] if args.only else sorted(p.stem for p in GT_DIR.glob("*.yaml"))

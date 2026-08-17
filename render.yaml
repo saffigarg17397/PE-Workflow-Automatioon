@@ -17,7 +17,7 @@ services:
       - key: CIM_DB_URL
         value: "sqlite:////tmp/cim_memo.db"
       # Only needed if you turn live runs on. Set in the dashboard, not here.
-      - key: ANTHROPIC_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
       - key: CIM_RUN_PASSWORD
         sync: false

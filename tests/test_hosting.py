@@ -99,22 +99,18 @@ def _sample_run():
 
     def fc(self, s, d, p):
         self._record(s, "high", fx.FakeUsage(), 100)
-        return (
-            fx.brightpath_cited_response()
-            if s == "extract_cited"
-            else fx.brightpath_flags_response()
-        )
+        return fx.brightpath_cited_text() if s == "extract_cited" else fx.brightpath_flags_text()
 
     def fk(self, s, d, p, max_tokens=16000):
         self._record(s, "high", fx.FakeUsage(), 100)
-        return fx.draft_response().content[0].text
+        return fx.draft_text()
 
     with (
         patch.object(
             LLMClient,
             "__init__",
             lambda s, model=None: (
-                setattr(s, "model", "claude-opus-5"),
+                setattr(s, "model", "gemini-2.5-flash"),
                 setattr(s, "telemetry", []),
                 None,
             )[-1],

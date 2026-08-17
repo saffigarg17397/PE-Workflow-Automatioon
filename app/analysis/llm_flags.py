@@ -7,20 +7,22 @@ its effort on reading rather than recomputing ratios it would do worse than
 Python at.
 
 Findings are parsed from a delimited text format rather than structured outputs
-because this pass needs citations, and citations and structured outputs cannot
-share a request.
+because this pass has to quote the document, and every quote it offers is
+verified against the page it names before becoming a citation — the same
+treatment field extraction gets. A finding whose evidence cannot be found is
+kept but marked, because the claim may still be worth a reviewer's attention
+even when the supporting quote was garbled.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Any
 
 from app.config import load_prompt
 from app.llm.client import CachedDocument, LLMClient
 from app.models.citation import Citation
 from app.models.flags import DetectionSource, FlagCategory, RedFlag, Severity
-from app.pipeline.extract import _citations_from_block
+from app.pipeline.extract import QuoteVerifier
 
 _VALID_CATEGORIES = {
     "internal_inconsistency": FlagCategory.INTERNAL_INCONSISTENCY,
@@ -41,81 +43,83 @@ _FINDING = re.compile(
     re.IGNORECASE,
 )
 
+# One or more evidence lines sit beneath each finding. A contradiction needs two
+# (the claim and the fact it contradicts), so this repeats rather than being a
+# single field on the FINDING line.
+_EVIDENCE = re.compile(
+    rf"{_E}PAGE{_E}:{_E}\s*(?P<page>\d+)\s*{_E}\|{_E}\s*{_E}QUOTE{_E}:{_E}\s*(?P<quote>[^\n]+)",
+    re.IGNORECASE,
+)
+
 _FORMAT_INSTRUCTION = """
 
-Format each finding as a single line beginning with FINDING:, followed by the evidence
-in the lines beneath it. Use exactly this shape:
+Format each finding as a line beginning with FINDING:, then one or more evidence lines,
+then a short explanation. Use exactly this shape:
 
 FINDING: <short specific title> | CATEGORY: <category> | SEVERITY: <high|medium|low>
-<the evidence, quoting the relevant passage or table row>
+PAGE: <n> | QUOTE: <verbatim text copied from that page>
+<one or two sentences explaining why this matters>
+
+Give one PAGE/QUOTE line per passage you are relying on — a contradiction needs two, one
+for each side of it. Copy quotes exactly as they appear in the page text; they are checked
+in code against the page you name, and a quote that cannot be found there is discarded.
 
 Leave a blank line between findings. If you find nothing worth reporting, write NO FINDINGS.
 """
 
 
-def parse_findings(resp: Any) -> list[RedFlag]:
-    """Walk response blocks, attaching citations to the most recent FINDING line.
+def parse_findings(text: str, page_text: list[str]) -> list[RedFlag]:
+    """Parse findings and verify each piece of evidence against the document.
 
-    Same accumulation pattern as the cited extraction pass: blocks don't align
-    1:1 with findings, so we track the current finding as we scan.
+    A finding whose quotes all fail verification still reaches the memo — the
+    observation may be sound even if the model mangled the supporting text — but
+    it arrives with no citations, which is what marks it for review. Dropping it
+    silently would hide a real risk; presenting it as sourced would be a lie.
     """
+    verifier = QuoteVerifier(page_text)
     flags: list[RedFlag] = []
-    current: RedFlag | None = None
-    detail_buf: list[str] = []
+    matches = list(_FINDING.finditer(text))
 
-    def _flush() -> None:
-        nonlocal current, detail_buf
-        if current is not None:
-            detail = " ".join(detail_buf).strip()
-            current.detail = detail[:1200] or current.title
-            flags.append(current)
-        current = None
-        detail_buf = []
-
-    for block in resp.content:
-        if getattr(block, "type", None) != "text":
+    for i, m in enumerate(matches):
+        cat = _VALID_CATEGORIES.get(m.group("cat").strip().lower())
+        if cat is None:
             continue
-        text: str = block.text
-        cites: list[Citation] = _citations_from_block(block)
+        try:
+            sev = Severity(m.group("sev").strip().lower())
+        except ValueError:
+            sev = Severity.LOW
 
-        matches = list(_FINDING.finditer(text))
-        if not matches:
-            if current is not None:
-                detail_buf.append(text.strip())
-                current.citations.extend(cites)
-            continue
+        # Everything between this finding line and the next belongs to it.
+        start = m.end()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        body = text[start:end]
 
-        for i, m in enumerate(matches):
-            _flush()
-            cat = _VALID_CATEGORIES.get(m.group("cat").strip().lower())
-            if cat is None:
-                continue
-            try:
-                sev = Severity(m.group("sev").strip().lower())
-            except ValueError:
-                sev = Severity.LOW
+        citations: list[Citation] = []
+        for ev in _EVIDENCE.finditer(body):
+            quote = ev.group("quote").strip().strip("*_`\"'").strip()
+            page = verifier.locate(quote, int(ev.group("page")))
+            if page is not None:
+                citations.append(Citation(page=page, quote=quote[:600]))
 
-            current = RedFlag(
+        detail = _EVIDENCE.sub("", body).strip()
+        flags.append(
+            RedFlag(
                 category=cat,
                 severity=sev,
                 title=m.group("title").strip()[:200],
-                detail="",
+                detail=detail[:1200] or m.group("title").strip(),
                 source=DetectionSource.MODEL,
-                citations=list(cites),
+                citations=citations,
             )
-            # Text between this finding line and the next is its evidence.
-            start = m.end()
-            end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
-            detail_buf.append(text[start:end].strip())
+        )
 
-    _flush()
     return flags
 
 
 def run(client: LLMClient, doc: CachedDocument) -> list[RedFlag]:
     prompt = load_prompt("llm_flags") + _FORMAT_INSTRUCTION
-    resp = client.extract_cited("llm_flags", doc, prompt)
-    return parse_findings(resp)
+    text = client.extract_cited("llm_flags", doc, prompt)
+    return parse_findings(text, doc.page_text)
 
 
 def dedupe(rule_flags: list[RedFlag], model_flags: list[RedFlag]) -> list[RedFlag]:

@@ -3,9 +3,9 @@
 Two schema layers here, deliberately:
 
   * `*Raw` models are what the extraction call fills in — plain values, no
-    citations, because the Claude API rejects `output_config.format` and
-    `citations` on the same request. Structured extraction and cited extraction
-    are therefore separate passes.
+    provenance. Structured extraction reads the PDF for its layout; the citation
+    pass reads page-numbered text so it can name pages and quote them. Two
+    views of the same document, so two passes.
   * The `Cited[...]` models are the joined result the rest of the pipeline sees.
 
 The join happens in `pipeline/extract.py`. Keeping the raw layer flat and

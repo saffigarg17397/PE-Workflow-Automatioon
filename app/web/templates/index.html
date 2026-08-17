@@ -30,6 +30,15 @@
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 mb-1">…or upload a PDF</label>
+        {# The warning sits above the picker, not below it: it is only useful
+           before someone chooses a file, and a real CIM is exactly what a PE
+           reader will reach for first. #}
+        <p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-2">
+          <strong>Do not upload a confidential document.</strong>
+          Uploads are sent to Google's Gemini API on a free-tier key, whose terms
+          permit using submitted content to improve their models. Use the sample
+          CIMs above, or a document you are free to disclose.
+        </p>
         <input type="file" name="upload" accept="application/pdf"
                class="w-full text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-slate-100">
       </div>

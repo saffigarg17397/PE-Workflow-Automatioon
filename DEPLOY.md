@@ -1,60 +1,46 @@
 # Deploying a shareable demo
 
-The goal is a URL you can put in an email that loads instantly, shows real
-output, and cannot cost you money.
+The goal is a URL you can put in an email that loads instantly and shows real
+output. On the Google AI Studio free tier this costs nothing end to end —
+hosting and generation both.
 
-## The one thing to get right
+## What replaced cost as the constraint
 
-A hosted instance holds your `ANTHROPIC_API_KEY` server-side. If the run button
-is open to the internet, **every visitor spends your credits** — and a crawler
-hitting it in a loop spends a lot of them.
+Model calls are free, so the thing to manage is no longer spend. Two constraints
+took its place, and the second is the one that matters:
 
-So the deployed instance runs in **demo mode**: it serves memos you generated
-beforehand, read-only. Those memos are real pipeline output — same citations,
-same review queue, same telemetry, nothing simulated — they just aren't
-regenerated per visitor. Live runs stay available behind `CIM_RUN_PASSWORD` for
-when you want to drive it in an interview.
+**Rate limits are shared.** The free tier allows 1,500 requests/day and 15/minute
+across the whole key. Each memo is four calls. An open run button plus a crawler
+in a loop exhausts the day's quota for everyone, including you.
 
-| | Cost per visitor | Load time | Abuse risk |
-|---|---|---|---|
-| Demo mode (recommended) | $0 | instant | none |
-| Open live runs | ~$0.50 × visitors | 40–90s | unbounded |
+**Free-tier prompts may be used for training.** That is fine for the synthetic
+CIMs in this repo. It is emphatically not fine the first time a visitor uploads
+a real one — and a PE reader looking at a CIM tool will be tempted to try exactly
+that. Any instance with live runs enabled must say so on the upload form, in
+plain words, before the file picker.
+
+So the deployed instance defaults to **demo mode**: it serves memos generated
+beforehand, read-only. Those memos are real pipeline output — same verified
+citations, same review queue, same telemetry, nothing simulated — they just
+aren't regenerated per visitor. Live runs stay available behind
+`CIM_RUN_PASSWORD` for when you want to drive it in an interview.
+
+| | Cost per visitor | Load time | Quota risk | Confidentiality |
+|---|---|---|---|---|
+| Demo mode (recommended) | $0 | instant | none | nothing leaves the box |
+| Open live runs | $0 | 40–90s | unbounded | visitor uploads reach Google |
 
 ---
 
-## Doing this without spending anything
+## Getting a key
 
-Hosting is free outright — Render's free plan runs the container, and demo mode
-means the deployed instance never holds an API key or makes a call.
+aistudio.google.com → **Get API key** → *Create API key*. A Google account is
+all it needs — no card, no phone verification, no billing setup. Keys start with
+`AIza`. Put it in `.env` as `GEMINI_API_KEY=AIza...`.
 
-Generation is the only step that consumes model tokens, and it can be covered by
-free credit rather than a purchase:
-
-* **Anthropic's new-account grant — $5, no card.** Console → Plans & Billing →
-  *Claim free credits*, gated on SMS verification (a real mobile, not VoIP).
-  Nothing in this repo changes; the key works as-is. Five memos cost $2–3, so
-  the grant covers the whole corpus with change left over.
-* **Google Cloud's $300 / 90-day trial**, spent on Claude via Vertex AI, if the
-  Anthropic grant is unavailable. This needs a code change — `AnthropicVertex`
-  in place of `Anthropic` in `app/llm/client.py` — and it is worth confirming
-  that the model id and the citations + structured-output features this pipeline
-  depends on are available on Vertex before committing to it. Not the first
-  choice.
-
-To spend as little of that as possible:
-
-```bash
-make seed-one                       # one document, ~$0.50, still a real demo
-CIM_MODEL=claude-sonnet-5 make seed  # whole corpus at roughly half the cost
-```
-
-`make seed-one` is the floor. A single memo with working citations, a populated
-review queue and a real red flag demonstrates everything the tool claims; the
-other four documents make the *eval* meaningful, not the demo.
-
-What cannot be free is generating the memos at all. The seed files have to be
-genuine pipeline output — a demo of a provenance system that ships invented
-numbers is self-refuting, and any reader who checks one citation finds out.
+Generating the full corpus is 20 requests against a 1,500/day allowance, so you
+can regenerate freely while tuning prompts. `make seed-one` runs a single
+document if you just want to see one end to end.
 
 ---
 
@@ -63,25 +49,26 @@ numbers is self-refuting, and any reader who checks one citation finds out.
 ### 1. Generate the memos locally (needs your API key)
 
 ```bash
-cp .env.example .env          # add ANTHROPIC_API_KEY
+cp .env.example .env          # add GEMINI_API_KEY
 make install
 make seed                     # runs all 5 CIMs, writes data/seed_runs/*.json
 make eval-seeds               # scores those same runs — no API calls, free
 ```
 
-`make seed` is the only step that costs money — roughly $2–3 for five memos, once.
-`make seed-one` does a single document for ~$0.50 if you are working off the
-free grant.
+`make seed` is 20 requests — about 1.3% of the daily free allowance.
 
 `make eval-seeds` scores the artifacts you just generated rather than
-regenerating them. Scoring needs no model call, so running the corpus twice
-would double the cost for no extra signal. Use plain `make eval` only when you
-want a fresh generation measured (e.g. after changing a prompt).
+regenerating them. Scoring needs no model call at all, so it is both instant
+and free of quota. Use plain `make eval` only when you want a fresh generation
+measured (e.g. after changing a prompt).
 
 Check the output before committing it. `data/memos/*.md` are the rendered memos;
-read one and confirm the citations point at real pages and the numbers match the
-source CIM. If extraction degraded you'll see a red banner saying so — fix that
-before shipping, since the whole point of the demo is provenance.
+read one, pick a number, and confirm the page it cites really says that. The
+verifier already checked every quote mechanically, so a citation that survived
+to the memo should hold — but the first run on a new model is exactly when you
+want to confirm that by hand rather than trust it. If extraction degraded you'll
+see a red banner saying so, including a count of quotes the model offered that
+were not in the document.
 
 ### 2. Paste the eval numbers into the README
 
@@ -108,7 +95,7 @@ git push
 1. Push to GitHub.
 2. render.com → New → Blueprint → pick the repo. It reads `render.yaml`.
 3. Deploy. `CIM_DEMO_MODE=true` is already set in the blueprint.
-4. Leave `ANTHROPIC_API_KEY` unset — demo mode doesn't need it.
+4. Leave `GEMINI_API_KEY` unset — demo mode doesn't need it.
 
 You get `https://cim-ic-memo.onrender.com`.
 
@@ -117,16 +104,11 @@ You get `https://cim-ic-memo.onrender.com`.
 > the $7/month Starter plan removes it — worth it while you're actively sending
 > the link.
 
-**Fly.io** (no sleep on the free allowance):
-
-```bash
-fly launch --no-deploy          # detects the Dockerfile
-fly secrets set CIM_DEMO_MODE=true
-fly deploy
-```
-
-**Railway**: New Project → Deploy from GitHub → add `CIM_DEMO_MODE=true` in
-Variables. Detects the Dockerfile automatically.
+**Fly.io** no longer has a permanent free tier (removed in 2024 — new accounts
+get a short trial, then roughly $2–5/month). **Railway**: New Project → Deploy
+from GitHub → add `CIM_DEMO_MODE=true` in Variables; it detects the Dockerfile
+automatically. **Oracle Cloud Always Free** gives an always-on VM with no sleep
+if the Render cold start bothers you and you don't mind administering a box.
 
 ### 5. Check it
 
@@ -147,7 +129,7 @@ is the thing worth showing.
 ```bash
 # in the host's dashboard
 CIM_RUN_PASSWORD=<something>
-ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=AIza...
 ```
 
 The run form reappears with a password field. You can drive a live run while
@@ -167,11 +149,15 @@ Unset both when you're done.
 - **No auth on memo URLs.** Anyone with a run id can read that memo. The content
   is synthetic, so this is deliberate — don't point a public instance at real
   deal documents.
+- **Free-tier prompts may train the model.** Anything uploaded to a live-run
+  instance is sent to Google under free-tier terms. A paid key changes those
+  terms; the free one does not.
 - **Uploads are capped** at `CIM_MAX_UPLOAD_MB` (default 32) and streamed to a
   temp file that's deleted after the run.
 
 ## If you point this at real CIMs
 
-Don't do it on a public URL. At minimum you'd want auth in front of the whole
-app, a private network, encryption at rest, and a data-retention review — a CIM
-is confidential by definition and this app has none of that.
+Don't do it on a public URL, and not on a free-tier key at all. At minimum you'd
+want a paid key (so prompts are excluded from training), auth in front of the
+whole app, a private network, encryption at rest, and a data-retention review — a
+CIM is confidential by definition and this app has none of that.

@@ -74,21 +74,19 @@ def test_scorer_runs_against_a_mocked_run():
     def fake_cited(self, stage, doc, prompt):
         self._record(stage, "high", fx.FakeUsage(), 100)
         return (
-            fx.brightpath_cited_response()
-            if stage == "extract_cited"
-            else fx.brightpath_flags_response()
+            fx.brightpath_cited_text() if stage == "extract_cited" else fx.brightpath_flags_text()
         )
 
     def fake_complete(self, stage, doc, prompt, max_tokens=16000):
         self._record(stage, "high", fx.FakeUsage(), 100)
-        return fx.draft_response().content[0].text
+        return fx.draft_text()
 
     with (
         patch.object(
             LLMClient,
             "__init__",
             lambda s, model=None: (
-                setattr(s, "model", "claude-opus-5"),
+                setattr(s, "model", "gemini-2.5-flash"),
                 setattr(s, "telemetry", []),
                 None,
             )[-1],

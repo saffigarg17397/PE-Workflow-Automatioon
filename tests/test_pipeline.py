@@ -20,7 +20,7 @@ from tests import fixtures as fx
 
 @pytest.fixture
 def profile():
-    facts = extract.parse_cited_response(fx.brightpath_cited_response())
+    facts = extract.parse_cited_response(fx.brightpath_cited_text(), fx.brightpath_pages())
     return extract.build_profile(fx.brightpath_raw(), facts)
 
 
@@ -28,7 +28,7 @@ def profile():
 
 
 def test_cited_pass_parses_fields_and_pages():
-    facts = extract.parse_cited_response(fx.brightpath_cited_response())
+    facts = extract.parse_cited_response(fx.brightpath_cited_text(), fx.brightpath_pages())
     assert facts["latest_revenue"].as_float() == 9.3
     assert facts["latest_revenue"].citations[0].page == 9
     assert not facts["customer_count"].found
@@ -183,18 +183,18 @@ def test_same_profile_scores_differently_across_theses(profile):
 
 
 def test_model_findings_parse_with_citations():
-    flags = llm_flags.parse_findings(fx.brightpath_flags_response())
+    flags = llm_flags.parse_findings(fx.brightpath_flags_text(), fx.brightpath_pages())
     assert len(flags) == 2
     top = flags[0]
     assert top.category == FlagCategory.INTERNAL_INCONSISTENCY
     assert top.severity == Severity.HIGH
     assert top.source == DetectionSource.MODEL
-    assert {c.page for c in top.citations} == {3, 11}
+    assert {c.page for c in top.citations} == {6, 11}
 
 
 def test_dedupe_drops_model_restatement_of_rule_finding(profile):
     rule_flags = rules.run(profile)
-    model_flags = llm_flags.parse_findings(fx.brightpath_flags_response())
+    model_flags = llm_flags.parse_findings(fx.brightpath_flags_text(), fx.brightpath_pages())
     merged = llm_flags.dedupe(rule_flags, model_flags)
     assert len(merged) <= len(rule_flags) + len(model_flags)
     assert all(f in merged for f in rule_flags)
@@ -229,7 +229,7 @@ def test_context_marks_pending_fields_and_carries_pages(profile):
 
 
 def test_section_parsing():
-    secs = draft.parse_sections(fx.draft_response().content[0].text)
+    secs = draft.parse_sections(fx.draft_text())
     assert set(secs) >= {
         "recommendation_rationale",
         "business_overview",

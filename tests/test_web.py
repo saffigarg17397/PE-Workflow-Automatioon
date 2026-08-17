@@ -31,15 +31,11 @@ def seeded():
 
     def fc(self, s, d, p):
         self._record(s, "high", fx.FakeUsage(400, 1200, 27000, 0), 9000)
-        return (
-            fx.brightpath_cited_response()
-            if s == "extract_cited"
-            else fx.brightpath_flags_response()
-        )
+        return fx.brightpath_cited_text() if s == "extract_cited" else fx.brightpath_flags_text()
 
     def fk(self, s, d, p, max_tokens=16000):
         self._record(s, "high", fx.FakeUsage(3000, 800, 0, 0), 7000)
-        return fx.draft_response().content[0].text
+        return fx.draft_text()
 
     db.init_db()
     with (
@@ -47,7 +43,7 @@ def seeded():
             LLMClient,
             "__init__",
             lambda s, model=None: (
-                setattr(s, "model", "claude-opus-5"),
+                setattr(s, "model", "gemini-2.5-flash"),
                 setattr(s, "telemetry", []),
                 None,
             )[-1],

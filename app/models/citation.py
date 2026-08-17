@@ -23,10 +23,11 @@ class Confidence(str, Enum):
 class Citation(BaseModel):
     """A pointer back into the source document.
 
-    Populated from the Claude API's native PDF citations, which return
-    `page_location` (1-indexed) plus the `cited_text` span. We do not
-    reconstruct these with regex — model-reported spans are what the model
-    actually conditioned on, which is the thing worth showing a reviewer.
+    Every instance has been verified: `pipeline/extract.py` matches the quoted
+    text against the extracted text of the page before constructing one, and
+    discards the claim entirely if it does not appear. Nothing else in the
+    codebase re-checks provenance, because a `Citation` existing is the check
+    having passed. Construct these only through the verifier.
     """
 
     page: int = Field(ge=1, description="1-indexed source page")

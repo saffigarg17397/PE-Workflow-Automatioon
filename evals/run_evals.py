@@ -261,8 +261,10 @@ def main() -> int:
     # score it doubles the cost of the corpus for no extra signal, so
     # `make seed && make eval --from-seeds` is the cheap path: generate once,
     # score the same artifacts you are going to ship.
-    if not args.from_seeds and not os.environ.get("ANTHROPIC_API_KEY"):
-        print("ANTHROPIC_API_KEY is not set — the eval harness makes real API calls.")
+    if not args.from_seeds and not (
+        os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    ):
+        print("GEMINI_API_KEY is not set — the eval harness makes real API calls.")
         print("Set it, or run `make eval-seeds` to score already-generated runs for free.")
         return 1
 

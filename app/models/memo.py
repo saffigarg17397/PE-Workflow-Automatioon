@@ -51,6 +51,10 @@ class ExtractionHealth(BaseModel):
         description="Extracted fields the citation pass is actually asked to locate",
     )
     facts_located: int = Field(default=0, description="Fields the cited pass returned")
+    quotes_rejected: int = Field(
+        default=0,
+        description="Quotes the model supplied that could not be found in the document",
+    )
     flags_parsed: int = 0
 
     @property
@@ -93,6 +97,13 @@ class ExtractionHealth(BaseModel):
                 "The citation pass returned nothing the parser recognised. Every figure "
                 "in this memo is unverified. This indicates a format or API failure, not "
                 "a sparse document — do not rely on this memo."
+            )
+        if self.quotes_rejected and self.quotes_rejected >= self.fields_cited:
+            return (
+                f"{self.quotes_rejected} of the quotes offered as evidence could not be "
+                f"found anywhere in the document, against only {self.fields_cited} that "
+                f"could. The model is inventing sources rather than locating them — this "
+                f"memo is unsafe to rely on at any level."
             )
         return (
             f"Only {self.citation_rate:.0f}% of extracted fields carry a source page "

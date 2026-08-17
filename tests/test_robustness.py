@@ -17,11 +17,10 @@ import pytest
 from app.analysis import rules, scoring
 from app.analysis.llm_flags import parse_findings
 from app.config import load_thesis
-from app.models.citation import Citation, Cited, Confidence
+from app.models.citation import Cited, Confidence
 from app.models.deal import DealProfile, EbitdaAddback, FiscalYear
 from app.pipeline import draft, extract, ingest
-from app.pipeline.extract import CitedFact, parse_cited_response
-from tests.fixtures import FakeCitation, FakeResponse, FakeTextBlock
+from app.pipeline.extract import CitedFact, QuoteVerifier, parse_cited_response
 
 # ------------------------------------------------------- format drift: FIELD
 
@@ -41,21 +40,17 @@ from tests.fixtures import FakeCitation, FakeResponse, FakeTextBlock
     ],
 )
 def test_field_line_survives_markdown_emphasis(line):
-    facts = parse_cited_response(FakeResponse(content=[FakeTextBlock(text=line)]))
+    facts = parse_cited_response(line, [])
     assert facts["latest_revenue"].as_float() == 9.3
 
 
 def test_unknown_field_names_are_ignored_not_crashed():
-    facts = parse_cited_response(
-        FakeResponse(content=[FakeTextBlock(text="FIELD: invented_field | VALUE: 5")])
-    )
+    facts = parse_cited_response("FIELD: invented_field | VALUE: 5", [])
     assert facts == {}
 
 
 def test_prose_only_response_yields_no_facts():
-    facts = parse_cited_response(
-        FakeResponse(content=[FakeTextBlock(text="I was unable to locate these fields.")])
-    )
+    facts = parse_cited_response("I was unable to locate these fields.", [])
     assert facts == {}
 
 
@@ -76,7 +71,7 @@ def test_prose_only_response_yields_no_facts():
     ],
 )
 def test_currency_and_unit_formats_parse(raw, expected):
-    assert CitedFact("f", raw, []).as_float() == expected
+    assert CitedFact("f", raw).as_float() == expected
 
 
 @pytest.mark.parametrize(
@@ -85,7 +80,7 @@ def test_currency_and_unit_formats_parse(raw, expected):
 def test_null_sentinels_are_not_treated_as_found(raw):
     """A model that answers 'n/a' has found nothing. Treating that as a value
     would attach a real citation to a non-answer."""
-    f = CitedFact("f", raw, [])
+    f = CitedFact("f", raw)
     assert not f.found
     assert f.as_float() is None
 
@@ -93,18 +88,22 @@ def test_null_sentinels_are_not_treated_as_found(raw):
 def test_range_values_are_flagged_ambiguous():
     """Silently taking the first number of a range would put an arbitrary pick
     into a memo presented as sourced fact."""
-    assert CitedFact("f", "1.2 to 1.5", []).is_ambiguous
-    assert CitedFact("f", "between $9.3 and $9.8 million", []).is_ambiguous
-    assert not CitedFact("f", "$9.3 million", []).is_ambiguous
+    assert CitedFact("f", "1.2 to 1.5").is_ambiguous
+    assert CitedFact("f", "between $9.3 and $9.8 million").is_ambiguous
+    assert not CitedFact("f", "$9.3 million").is_ambiguous
+
+
+def _fact(field: str, value: str, quote: str, pages: list[str], page: int = 1) -> CitedFact:
+    """Build a verified CitedFact the way the pipeline does — through the verifier."""
+    return CitedFact(
+        field, value, claimed_page=page, claimed_quote=quote, verifier=QuoteVerifier(pages)
+    )
 
 
 def test_ambiguous_cited_value_downgrades_confidence():
     raw = extract.DealProfileRaw(employees=88)
-    facts = {
-        "employees": CitedFact(
-            "employees", "88 to 92", [Citation(page=3, quote="88 to 92 employees")]
-        )
-    }
+    pages = ["the Company employs 88 to 92 employees across all sites"]
+    facts = {"employees": _fact("employees", "88 to 92", "employs 88 to 92 employees", pages)}
     p = extract.build_profile(raw, facts)
     assert p.employees.confidence == Confidence.MEDIUM
     assert "more than one figure" in (p.employees.note or "")
@@ -112,10 +111,87 @@ def test_ambiguous_cited_value_downgrades_confidence():
 
 def test_unreadable_cited_value_downgrades_confidence():
     raw = extract.DealProfileRaw(employees=88)
-    facts = {"employees": CitedFact("employees", "several dozen", [Citation(page=3, quote="x")])}
+    pages = ["the Company employs several dozen people at its head office"]
+    facts = {
+        "employees": _fact("employees", "several dozen", "employs several dozen people", pages)
+    }
     p = extract.build_profile(raw, facts)
     assert p.employees.confidence == Confidence.MEDIUM
     assert "no readable figure" in (p.employees.note or "")
+
+
+# ---------------------------------------------------- citation verification
+#
+# The provenance guarantee lives here. Everything downstream treats a Citation
+# as proof the quote is really in the document, so these are the tests that make
+# that true rather than aspirational.
+
+
+def test_fabricated_quote_is_rejected():
+    """The failure this exists to prevent: a plausible sentence the document
+    never contained, rendered to a reviewer as a sourced fact."""
+    pages = ["Revenue grew to $9.3 million in fiscal 2024."]
+    f = _fact("latest_revenue", "9.3", "Revenue reached $14.2 million on record demand", pages)
+    assert f.citations == []
+    assert f.rejected_quote
+
+
+def test_rejected_quote_leaves_the_value_uncited_and_says_why():
+    raw = extract.DealProfileRaw(employees=88)
+    pages = ["the Company employs approximately 88 people"]
+    facts = {"employees": _fact("employees", "88", "a workforce of 88 full-time staff", pages)}
+    p = extract.build_profile(raw, facts)
+    assert p.employees.value == 88, "the structured value survives"
+    assert p.employees.citations == [], "but it is not presented as sourced"
+    assert p.employees.confidence == Confidence.LOW
+    assert "Citation rejected" in (p.employees.note or "")
+    assert "_[uncited — pending review]_" in p.employees.render()
+
+
+def test_wrong_page_number_is_repaired_not_discarded():
+    """A correct quote reported against the wrong page is a typo, not a
+    fabrication — the reviewer still lands on the passage."""
+    pages = ["cover", "table of contents", "Adjusted EBITDA of $1.34 million in fiscal 2024"]
+    f = _fact("latest_adjusted_ebitda", "1.34", "Adjusted EBITDA of $1.34 million", pages, page=1)
+    assert f.citations[0].page == 3
+    assert f.page_corrected
+
+
+def test_pdf_whitespace_artifacts_do_not_break_verification():
+    """pypdf splits table cells across lines and drops punctuation. A verifier
+    that demanded literal equality would reject genuinely verbatim quotes and
+    report a healthy document as degraded."""
+    pages = ["Revenue\n$6.8\n$8.1\n$9.3\nGross  Profit\n$2.3"]
+    f = _fact("latest_revenue", "9.3", "Revenue $6.8 $8.1 $9.3", pages)
+    assert f.citations, "normalised matching should absorb layout noise"
+
+
+def test_trivially_short_quotes_are_refused():
+    """'Revenue' appears on every page of a CIM. Matching it proves nothing, so
+    it must not be allowed to stand as evidence."""
+    pages = ["Revenue for the period was strong across all service lines."]
+    assert _fact("latest_revenue", "9.3", "Revenue", pages).citations == []
+    assert _fact("latest_revenue", "9.3", "Revenue for", pages).citations == []
+
+
+def test_quote_matching_is_not_fooled_by_word_reordering():
+    """Normalisation strips punctuation, so it must still preserve word order —
+    otherwise a shuffled paraphrase would verify."""
+    pages = ["The Company employs approximately 88 people across eleven locations."]
+    f = _fact("employees", "88", "approximately people employs 88 the Company", pages)
+    assert f.citations == []
+
+
+def test_health_counts_rejected_quotes():
+    raw = extract.DealProfileRaw(employees=88, year_founded=2013)
+    pages = ["Founded in 2013 and employing approximately 88 people"]
+    facts = {
+        "employees": _fact("employees", "88", "employing approximately 88 people", pages),
+        "year_founded": _fact("year_founded", "2013", "incorporated in Delaware in 2013", pages),
+    }
+    h = extract.health_of(extract.build_profile(raw, facts), facts)
+    assert h.quotes_rejected == 1
+    assert h.facts_located == 2, "both were reported; only one was verifiable"
 
 
 # ----------------------------------------------------- format drift: FINDING
@@ -130,47 +206,34 @@ def test_unreadable_cited_value_downgrades_confidence():
     ],
 )
 def test_finding_line_survives_emphasis(line):
-    flags = parse_findings(FakeResponse(content=[FakeTextBlock(text=line + "\nevidence")]))
+    flags = parse_findings(line + "\nevidence", [])
     assert len(flags) == 1
     assert flags[0].title == "t"
 
 
 def test_invalid_category_is_dropped_not_crashed():
-    assert (
-        parse_findings(
-            FakeResponse(
-                content=[FakeTextBlock(text="FINDING: x | CATEGORY: bogus | SEVERITY: high")]
-            )
-        )
-        == []
-    )
+    assert parse_findings("FINDING: x | CATEGORY: bogus | SEVERITY: high", []) == []
 
 
 def test_invalid_severity_defaults_to_low():
-    flags = parse_findings(
-        FakeResponse(
-            content=[FakeTextBlock(text="FINDING: x | CATEGORY: growth | SEVERITY: critical")]
-        )
-    )
+    flags = parse_findings("FINDING: x | CATEGORY: growth | SEVERITY: critical", [])
     assert flags[0].severity.value == "low"
 
 
 def test_no_findings_sentinel():
-    assert parse_findings(FakeResponse(content=[FakeTextBlock(text="NO FINDINGS")])) == []
+    assert parse_findings("NO FINDINGS", []) == []
 
 
 def test_citations_attach_to_the_finding_they_follow():
+    pages = ["", "", "", "margins compressed sharply during the period"]
     flags = parse_findings(
-        FakeResponse(
-            content=[
-                FakeTextBlock(
-                    text="FINDING: a | CATEGORY: growth | SEVERITY: high\nbody",
-                    citations=[FakeCitation(start_page_number=4, cited_text="q")],
-                )
-            ]
-        )
+        "FINDING: a | CATEGORY: growth | SEVERITY: high\n"
+        "PAGE: 4 | QUOTE: margins compressed sharply during the period\n"
+        "body",
+        pages,
     )
     assert flags[0].citations[0].page == 4
+    assert "PAGE:" not in flags[0].detail, "evidence lines belong in citations, not prose"
 
 
 # ------------------------------------------------------ format drift: memo

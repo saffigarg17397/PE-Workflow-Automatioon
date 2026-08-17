@@ -16,11 +16,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 #
 # pydantic-settings' own `env_file` only populates this Settings model's
 # CIM_-prefixed fields — it does not export anything to os.environ. But
-# ANTHROPIC_API_KEY is read from os.environ by the Anthropic SDK, not by
-# Settings, so without this a key sitting in .env is silently ignored and the
-# pipeline reports "ANTHROPIC_API_KEY is not set" while the file plainly
-# contains it. `override=False` keeps an explicitly exported key winning over
-# the file, which is what someone switching keys expects.
+# GEMINI_API_KEY is read from os.environ by the Google SDK, not by Settings, so
+# without this a key sitting in .env is silently ignored and the pipeline
+# reports "GEMINI_API_KEY is not set" while the file plainly contains it.
+# `override=False` keeps an explicitly exported key winning over the file,
+# which is what someone switching keys expects.
 _ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(_ENV_FILE, override=False)
 # Also try the usual cwd-upward search, so a key still resolves when the app is
@@ -36,7 +36,7 @@ SAMPLE_CIMS = ROOT / "data" / "sample_cims"
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="CIM_", env_file=".env", extra="ignore")
 
-    model: str = "claude-opus-5"
+    model: str = "gemini-2.5-flash"
     db_url: str = "sqlite:///./cim_memo.db"
     default_thesis: str = "services_rollup"
     max_upload_mb: int = 32
@@ -63,11 +63,26 @@ STAGE_EFFORT: dict[str, str] = {
     "draft": "high",
 }
 
-# USD per million tokens. Cache reads bill at ~0.1x input, writes at ~1.25x.
+# Effort is kept as the pipeline's vocabulary because the eval sweep, the
+# telemetry and the README all speak it. Gemini expresses the same lever as a
+# thinking-token budget, so the levels map onto budgets here — one translation
+# in one place, rather than a second concept threaded through the stages.
+# -1 asks the model to decide for itself.
+THINKING_BUDGET: dict[str, int] = {
+    "low": 0,
+    "medium": 4096,
+    "high": 16384,
+    "xhigh": 24576,
+    "max": -1,
+}
+
+# USD per million tokens. Free-tier keys are billed at zero regardless; these
+# exist so the telemetry reports what the same run *would* cost on a paid key,
+# which is the number worth quoting to someone evaluating the tool.
 PRICING: dict[str, dict[str, float]] = {
-    "claude-opus-5": {"input": 5.00, "output": 25.00},
-    "claude-sonnet-5": {"input": 3.00, "output": 15.00},
-    "claude-haiku-4-5": {"input": 1.00, "output": 5.00},
+    "gemini-2.5-flash": {"input": 0.30, "output": 2.50},
+    "gemini-2.5-flash-lite": {"input": 0.10, "output": 0.40},
+    "gemini-2.5-pro": {"input": 1.25, "output": 10.00},
 }
 
 
@@ -78,7 +93,7 @@ def price_call(
     cache_read: int = 0,
     cache_write: int = 0,
 ) -> float:
-    p = PRICING.get(model, PRICING["claude-opus-5"])
+    p = PRICING.get(model, PRICING["gemini-2.5-flash"])
     return round(
         (
             input_tokens * p["input"]

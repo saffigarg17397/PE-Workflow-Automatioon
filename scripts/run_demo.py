@@ -23,42 +23,42 @@ def check_api_key() -> str | None:
 
     The placeholder check matters more than the missing check: copying
     .env.example and forgetting to edit it leaves a syntactically fine key that
-    loads cleanly and then fails as a 401 partway through a paid run. Catching
+    loads cleanly and then fails as a 400 partway through the corpus. Catching
     it here costs nothing and saves a confusing mid-flight failure.
     """
-    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    key = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
     env_file = ROOT / ".env"
 
     if key and "your-key-here" not in key:
-        if not key.startswith("sk-ant-"):
+        if not key.startswith("AIza"):
             return (
-                f"ANTHROPIC_API_KEY does not look like an Anthropic key "
-                f"(expected it to start with 'sk-ant-', got '{key[:8]}...').\n"
-                "  Check you copied the whole key from console.anthropic.com."
+                f"GEMINI_API_KEY does not look like a Google AI Studio key "
+                f"(expected it to start with 'AIza', got '{key[:8]}...').\n"
+                "  Check you copied the whole key from aistudio.google.com -> Get API key."
             )
         return None
 
     if key:
         return (
-            f"ANTHROPIC_API_KEY is still the placeholder from .env.example.\n\n"
-            f"  Open {env_file.name} and replace 'sk-ant-your-key-here' with your real key\n"
-            "  from console.anthropic.com -> API Keys."
+            f"GEMINI_API_KEY is still the placeholder from .env.example.\n\n"
+            f"  Open {env_file.name} and replace it with your real key from\n"
+            "  aistudio.google.com -> Get API key."
         )
 
     if not env_file.exists():
         return (
-            "ANTHROPIC_API_KEY is not set.\n\n"
+            "GEMINI_API_KEY is not set.\n\n"
             "  cp .env.example .env      # then put your key in it\n"
-            "  ...or: export ANTHROPIC_API_KEY=sk-ant-..."
+            "  ...or: export GEMINI_API_KEY=AIza..."
         )
 
     return (
-        f"ANTHROPIC_API_KEY is not set, though {env_file.name} exists.\n\n"
+        f"GEMINI_API_KEY is not set, though {env_file.name} exists.\n\n"
         "  Check the file contains a line reading:\n"
-        "    ANTHROPIC_API_KEY=sk-ant-...\n"
+        "    GEMINI_API_KEY=AIza...\n"
         "  with no leading '#'.\n\n"
         "  Or set it for this shell only:\n"
-        "    export ANTHROPIC_API_KEY=sk-ant-..."
+        "    export GEMINI_API_KEY=AIza..."
     )
 
 

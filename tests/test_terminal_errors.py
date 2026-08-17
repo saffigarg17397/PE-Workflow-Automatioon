@@ -1,55 +1,67 @@
 """Fail-fast on account-level errors.
 
-An exhausted credit balance cannot resolve by trying the next document. The
-batch runners must stop on the first one rather than repeating an identical
-failure per document — five copies of the same message buries the one line that
-tells you what to do.
+An exhausted daily quota cannot resolve by trying the next document. The batch
+runners must stop on the first one rather than repeating an identical failure
+per document — five copies of the same message buries the one line that tells
+you what to do.
 """
 
 from __future__ import annotations
 
-import anthropic
-import httpx
 import pytest
+from google.genai import errors as genai_errors
 
-from app.llm.client import LLMError, _status_error
+from app.llm.client import LLMError, _api_error
 
 
-def _status_error_from(message: str, status: int = 400) -> anthropic.APIStatusError:
-    request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
-    response = httpx.Response(status, request=request, json={"error": {"message": message}})
-    return anthropic.APIStatusError(
-        message, response=response, body={"error": {"message": message}}
+def _error(message: str, status: int = 400) -> genai_errors.APIError:
+    """Build an APIError the way the SDK does, from a response body."""
+    return genai_errors.APIError(
+        status, {"error": {"code": status, "message": message, "status": "INVALID_ARGUMENT"}}
     )
 
 
 @pytest.mark.parametrize(
-    "message",
+    "message,status",
     [
-        "Your credit balance is too low to access the Anthropic API.",
-        "Please go to Plans & Billing to upgrade or purchase credits.",
-        "You have exceeded your quota.",
+        ("API key not valid. Please pass a valid API key.", 400),
+        ("Quota exceeded for quota metric 'Generate Content API requests'", 429),
+        ("RESOURCE_EXHAUSTED: you have run out of daily requests", 429),
+        ("Permission denied on resource project.", 403),
     ],
 )
-def test_account_level_errors_are_terminal(message):
-    err = _status_error("extract_structured", _status_error_from(message))
-    assert err.terminal
-    assert "account-level problem" in str(err)
+def test_account_level_errors_are_terminal(message, status):
+    assert _api_error("extract_structured", _error(message, status)).terminal
+
+
+def test_invalid_key_says_where_to_get_one():
+    """The most common first-run failure deserves the fix in the message rather
+    than a status code the reader has to go and look up."""
+    err = _api_error("extract_structured", _error("API key not valid. Pass a valid API key."))
+    assert "aistudio.google.com" in str(err)
+    assert "GEMINI_API_KEY" in str(err)
+
+
+def test_rate_limit_message_distinguishes_per_minute_from_per_day():
+    """Both arrive as the same error, and the response to each is different:
+    one is a sixty-second wait, the other is tomorrow."""
+    err = _api_error("draft", _error("Quota exceeded for requests per minute", 429))
+    assert "wait sixty seconds" in str(err)
+    assert "daily limit resets" in str(err)
 
 
 @pytest.mark.parametrize(
-    "message",
+    "message,status",
     [
-        "messages.0.content.0: invalid document",
-        "max_tokens must be less than 128000",
-        "Overloaded",
+        ("Request contains an invalid argument.", 400),
+        ("The model is overloaded. Please try again later.", 503),
+        ("Internal error encountered.", 500),
     ],
 )
-def test_request_level_errors_are_not_terminal(message):
+def test_request_level_errors_are_not_terminal(message, status):
     """Misclassifying a recoverable failure as terminal would abandon a run that
     would have succeeded on the next document."""
-    err = _status_error("extract_structured", _status_error_from(message))
-    assert not err.terminal
+    assert not _api_error("extract_structured", _error(message, status)).terminal
 
 
 def test_llm_error_defaults_to_non_terminal():
@@ -59,7 +71,7 @@ def test_llm_error_defaults_to_non_terminal():
 
 
 def test_run_demo_stops_the_batch_on_a_terminal_error(monkeypatch, capsys, tmp_path):
-    """The reported behaviour: a zero balance produced five identical failures."""
+    """The reported behaviour: an exhausted account produced five identical failures."""
     from unittest.mock import patch
 
     import scripts.run_demo as rd
@@ -68,9 +80,9 @@ def test_run_demo_stops_the_batch_on_a_terminal_error(monkeypatch, capsys, tmp_p
 
     def boom(path, thesis=None, on_progress=None):
         calls.append(str(path))
-        raise LLMError("Your credit balance is too low", terminal=True)
+        raise LLMError("Quota exceeded", terminal=True)
 
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    monkeypatch.setenv("GEMINI_API_KEY", "AIzaFAKE")
     monkeypatch.setattr(rd, "OUT", tmp_path)
     with (
         patch.object(rd.orchestrator, "run", boom),
@@ -93,9 +105,9 @@ def test_run_demo_continues_past_a_per_document_error(monkeypatch, capsys, tmp_p
 
     def boom(path, thesis=None, on_progress=None):
         calls.append(str(path))
-        raise LLMError("API error 500 in stage 'draft': Overloaded")
+        raise LLMError("API error 503 in stage 'draft': overloaded")
 
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    monkeypatch.setenv("GEMINI_API_KEY", "AIzaFAKE")
     monkeypatch.setattr(rd, "OUT", tmp_path)
     with (
         patch.object(rd.orchestrator, "run", boom),

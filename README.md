@@ -35,13 +35,13 @@ flowchart LR
     H --> J[Markdown / DOCX]
 ```
 
-Extraction runs as **two passes** because the Claude API rejects `citations` and `output_config.format` on the same request. The structured pass gets schema-validated values; the cited pass locates the source passage. They are joined by field name, and where they disagree the structured value wins, confidence is downgraded, and the conflict is recorded so it surfaces in the review queue rather than being silently resolved.
+Extraction runs as **two passes** over two views of the same document. The structured pass reads the PDF itself — table layout is where a CIM's financial content lives — and returns schema-validated values. The cited pass reads page-numbered text, because provenance means naming a page, and returns a page plus a verbatim quote per field. They are joined by field name, and where they disagree the structured value wins, confidence is downgraded, and the conflict is recorded so it surfaces in the review queue rather than being silently resolved.
 
 ---
 
 ## What makes this different from a PDF chatbot
 
-**1. Provenance on every number.** Each extracted figure carries its source page and the verbatim quote, using the Claude API's native PDF citations. A figure that cannot be cited is never rendered as an established fact — it is marked `[uncited — pending review]` and routed to a human. `Cited[T]` makes an uncited number *unrepresentable* in the type system rather than merely discouraged.
+**1. Provenance on every number, verified in code.** Each extracted figure carries its source page and the verbatim quote — and that quote is matched against the real text of the page it names before it is allowed to become a citation. No model assertion and no vendor annotation is taken on trust: a quote found nowhere in the document is discarded and the field is reported as unverified. A figure that cannot be cited is never rendered as an established fact — it is marked `[uncited — pending review]` and routed to a human. `Cited[T]` makes an uncited number *unrepresentable* in the type system rather than merely discouraged.
 
 **2. Confidence and human-in-the-loop.** Every field carries `high`/`medium`/`low`. Anything below `high` lands in a review queue showing the value, the source passage, and the reason it was flagged — a disagreement between passes, an ambiguous range, or a missing citation.
 
@@ -102,7 +102,7 @@ credits. Live runs stay available behind a password for interviews.
 ```bash
 git clone <this-repo> && cd PE-Workflow-Automatioon
 make install
-cp .env.example .env          # add your ANTHROPIC_API_KEY
+cp .env.example .env          # add your GEMINI_API_KEY
 make demo                     # generate CIMs, screen one, write the memo
 make serve                    # http://localhost:8000
 ```
