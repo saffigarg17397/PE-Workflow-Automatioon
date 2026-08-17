@@ -30,9 +30,15 @@ when you want to drive it in an interview.
 cp .env.example .env          # add ANTHROPIC_API_KEY
 make install
 make seed                     # runs all 5 CIMs, writes data/seed_runs/*.json
+make eval-seeds               # scores those same runs — no API calls, free
 ```
 
-This is the only step that costs money — roughly $2–3 total for five memos, once.
+`make seed` is the only step that costs money — roughly $2–3 for five memos, once.
+
+`make eval-seeds` scores the artifacts you just generated rather than
+regenerating them. Scoring needs no model call, so running the corpus twice
+would double the cost for no extra signal. Use plain `make eval` only when you
+want a fresh generation measured (e.g. after changing a prompt).
 
 Check the output before committing it. `data/memos/*.md` are the rendered memos;
 read one and confirm the citations point at real pages and the numbers match the

@@ -111,7 +111,8 @@ make serve                    # http://localhost:8000
 |---|---|
 | `make demo` | Screen a sample CIM, write `data/memos/<name>.md` |
 | `make serve` | Web UI — upload, review queue, exports |
-| `make eval` | Score extraction against ground truth *(makes API calls)* |
+| `make eval` | Score a fresh generation against ground truth *(makes API calls)* |
+| `make eval-seeds` | Score the runs `make seed` already produced *(free, no API calls)* |
 | `make sweep` | Effort sweep — accuracy vs. cost per level *(makes API calls)* |
 | `make test` | Full suite, mocked API, no key needed |
 | `make seed` | Run all 5 CIMs and export them as seeds for a hosted demo |

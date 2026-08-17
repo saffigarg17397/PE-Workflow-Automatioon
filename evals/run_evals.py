@@ -40,6 +40,7 @@ from app.llm.client import LLMError  # noqa: E402
 from app.models.deal import DealProfile  # noqa: E402
 from app.models.memo import MemoRun  # noqa: E402
 from app.pipeline import orchestrator  # noqa: E402
+from app.storage import seed  # noqa: E402
 
 GT_DIR = Path(__file__).resolve().parent / "ground_truth"
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -249,11 +250,20 @@ def main() -> int:
     ap.add_argument("--thesis", default=None)
     ap.add_argument("--only", default=None, help="Run a single slug")
     ap.add_argument("--label", default="", help="Tag this run in the results file")
+    ap.add_argument(
+        "--from-seeds",
+        action="store_true",
+        help="Score the runs already in data/seed_runs/ instead of regenerating them (free)",
+    )
     args = ap.parse_args()
 
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    # Scoring a stored run needs no model call. Regenerating a memo purely to
+    # score it doubles the cost of the corpus for no extra signal, so
+    # `make seed && make eval --from-seeds` is the cheap path: generate once,
+    # score the same artifacts you are going to ship.
+    if not args.from_seeds and not os.environ.get("ANTHROPIC_API_KEY"):
         print("ANTHROPIC_API_KEY is not set — the eval harness makes real API calls.")
-        print("Set it and re-run, or run `make test` for the offline test suite.")
+        print("Set it, or run `make eval-seeds` to score already-generated runs for free.")
         return 1
 
     gts = sorted(GT_DIR.glob("*.yaml"))
@@ -268,16 +278,35 @@ def main() -> int:
 
     for gt_path in gts:
         gt = yaml.safe_load(gt_path.read_text())
-        pdf = SAMPLE_CIMS / f"{gt['slug']}.pdf"
         print(f"scoring {gt['slug']} ...", flush=True)
-        if not pdf.exists():
-            scores.append(DocScore(slug=gt["slug"], error=f"missing {pdf.name}"))
-            continue
-        try:
-            run = orchestrator.run(pdf, thesis=thesis)
-        except (LLMError, ValueError) as e:
-            scores.append(DocScore(slug=gt["slug"], error=str(e)))
-            continue
+
+        if args.from_seeds:
+            seed_path = seed.SEED_DIR / f"{gt['slug']}.json"
+            if not seed_path.exists():
+                scores.append(
+                    DocScore(slug=gt["slug"], error="no seed run — run `make seed` first")
+                )
+                continue
+            try:
+                run = MemoRun(**json.loads(seed_path.read_text()))
+            except Exception as e:  # noqa: BLE001 - report, don't abort the corpus
+                scores.append(DocScore(slug=gt["slug"], error=f"unreadable seed: {e}"))
+                continue
+            # The seed was scored against the thesis it was generated with. Say
+            # so rather than silently reporting it under the requested one.
+            if run.memo.thesis_name != thesis.name:
+                print(f"  (seeded under '{run.memo.thesis_name}', not '{thesis.name}')")
+        else:
+            pdf = SAMPLE_CIMS / f"{gt['slug']}.pdf"
+            if not pdf.exists():
+                scores.append(DocScore(slug=gt["slug"], error=f"missing {pdf.name}"))
+                continue
+            try:
+                run = orchestrator.run(pdf, thesis=thesis)
+            except (LLMError, ValueError) as e:
+                scores.append(DocScore(slug=gt["slug"], error=str(e)))
+                continue
+
         scores.append(score_document(gt, run))
 
     print_scorecard(scores)
@@ -291,6 +320,7 @@ def main() -> int:
                 "timestamp": stamp,
                 "label": args.label,
                 "thesis": thesis.name,
+                "source": "seed_runs" if args.from_seeds else "live",
                 "tolerance": TOLERANCE,
                 "documents": [
                     {
