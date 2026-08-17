@@ -3,6 +3,7 @@ gets used to judge the pipeline."""
 
 from __future__ import annotations
 
+import pytest
 import yaml
 
 from evals.run_evals import GT_DIR, DocScore, FieldScore, _compare, score_document
@@ -103,3 +104,43 @@ def test_scorer_runs_against_a_mocked_run():
     assert score.attempted > 10
     assert score.accuracy > 80  # fixture mirrors ground truth
     assert "customer_concentration" in score.detected_flags
+
+
+# ------------------------------------------------------------- effort sweep
+
+
+def test_sweep_restores_stage_effort_even_on_failure():
+    """The sweep mutates the global STAGE_EFFORT. If it failed to restore it,
+    every subsequent run in the same process would silently use the last swept
+    level — a contaminated-results bug that produces no error."""
+    from unittest.mock import patch
+
+    from app.config import STAGE_EFFORT
+    from evals import sweep_effort
+
+    before = dict(STAGE_EFFORT)
+    with patch.object(sweep_effort.orchestrator, "run", side_effect=RuntimeError("boom")):
+        with pytest.raises(RuntimeError):
+            sweep_effort.run_level("low", ["brightpath_dental"], None)
+    assert dict(STAGE_EFFORT) == before
+
+
+def test_sweep_restores_stage_effort_on_success():
+    from unittest.mock import patch
+
+    from app.config import STAGE_EFFORT
+    from evals import sweep_effort
+
+    before = dict(STAGE_EFFORT)
+    with patch.object(sweep_effort.orchestrator, "run", side_effect=ValueError("skip this doc")):
+        res = sweep_effort.run_level("low", ["brightpath_dental"], None)
+    assert dict(STAGE_EFFORT) == before
+    assert res.errors == 1
+    assert res.docs == 0
+
+
+def test_sweep_level_result_handles_zero_docs():
+    """Averaging over an empty result set must not divide by zero."""
+    from evals.sweep_effort import LevelResult, print_table
+
+    print_table([LevelResult("low", 0, 0, 0, None, 0.0, 0, 0, 1)])

@@ -1,4 +1,4 @@
-.PHONY: install cims demo serve test lint typecheck eval clean
+.PHONY: install cims demo serve test lint typecheck eval sweep clean
 
 VENV := .venv
 PY := $(VENV)/bin/python
@@ -30,6 +30,9 @@ typecheck:
 
 eval:
 	$(PY) -m evals.run_evals
+
+sweep:
+	$(PY) -m evals.sweep_effort
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache **/__pycache__ *.db

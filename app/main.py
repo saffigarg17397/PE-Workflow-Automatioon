@@ -11,7 +11,6 @@ in front of the user.
 
 from __future__ import annotations
 
-import shutil
 import tempfile
 import threading
 import uuid
@@ -59,6 +58,24 @@ class Job:
 
 _JOBS: dict[str, Job] = {}
 _LOCK = threading.Lock()
+
+# In-flight jobs are held in memory only — they exist to drive the progress
+# poll, and the durable record is the saved MemoRun. Without a bound this dict
+# grows for the life of the process.
+_MAX_JOBS = 200
+
+
+def _prune_jobs() -> None:
+    """Drop the oldest finished jobs once the store is over its bound.
+
+    Caller must hold _LOCK. Running jobs are never evicted — losing one would
+    orphan a live progress poll.
+    """
+    if len(_JOBS) <= _MAX_JOBS:
+        return
+    finished = [jid for jid, j in _JOBS.items() if j.done]
+    for jid in finished[: len(_JOBS) - _MAX_JOBS]:
+        del _JOBS[jid]
 
 
 def _run_job(job: Job, path: Path, thesis: str | None, cleanup: bool) -> None:
@@ -143,27 +160,49 @@ async def start_run(
     sample: str = Form(default=""),
     upload: UploadFile | None = None,
 ) -> Any:
+    # Validate the thesis against the real listing before starting work, so a
+    # bad name is a 400 here rather than a background failure the user only
+    # sees after the progress spinner. `load_thesis` interpolates the name into
+    # a path, so an unvalidated value is also a traversal vector.
+    if thesis and thesis not in available_theses():
+        raise HTTPException(400, "Unknown thesis")
+
     if sample:
+        # Membership check against the actual listing, not a string test on the
+        # input. `SAMPLE_CIMS / "/etc/passwd"` yields "/etc/passwd" — pathlib
+        # discards the base when the right operand is absolute — so prefix or
+        # ".." filtering here would not be sufficient.
+        if sample not in {p.name for p in SAMPLE_CIMS.glob("*.pdf")}:
+            raise HTTPException(400, "Unknown sample")
         path = SAMPLE_CIMS / sample
         cleanup = False
         name = sample
-        if not path.exists():
-            raise HTTPException(400, "Unknown sample")
     elif upload is not None and upload.filename:
         if not upload.filename.lower().endswith(".pdf"):
             raise HTTPException(400, "Only PDF uploads are supported")
+        limit = settings.max_upload_mb * 1024 * 1024
         tmp = Path(tempfile.gettempdir()) / f"cim_{uuid.uuid4().hex}.pdf"
-        with tmp.open("wb") as fh:
-            shutil.copyfileobj(upload.file, fh)
-        if tmp.stat().st_size > settings.max_upload_mb * 1024 * 1024:
+        # Enforce the cap while streaming rather than after: copying first means
+        # an oversized upload is fully written to disk before being rejected.
+        written = 0
+        try:
+            with tmp.open("wb") as fh:
+                while chunk := await upload.read(1024 * 1024):
+                    written += len(chunk)
+                    if written > limit:
+                        raise HTTPException(400, f"File exceeds {settings.max_upload_mb}MB")
+                    fh.write(chunk)
+        except HTTPException:
             tmp.unlink(missing_ok=True)
-            raise HTTPException(400, f"File exceeds {settings.max_upload_mb}MB")
-        path, cleanup, name = tmp, True, upload.filename
+            raise
+        path, cleanup, name = tmp, True, Path(upload.filename).name
     else:
         raise HTTPException(400, "Choose a sample or upload a PDF")
 
     job = Job(job_id=uuid.uuid4().hex[:12], filename=name)
-    _JOBS[job.job_id] = job
+    with _LOCK:
+        _prune_jobs()
+        _JOBS[job.job_id] = job
     threading.Thread(
         target=_run_job, args=(job, path, thesis or None, cleanup), daemon=True
     ).start()

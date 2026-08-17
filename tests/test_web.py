@@ -120,3 +120,60 @@ def test_rejects_non_pdf_upload(client):
         data={"thesis": "services_rollup"},
     )
     assert r.status_code == 400
+
+
+# --------------------------------------------------------------- input safety
+
+
+@pytest.mark.parametrize(
+    "sample",
+    ["../../../etc/passwd", "../README.md", "/etc/passwd", "..%2F..%2Fetc%2Fpasswd", "nope.pdf"],
+)
+def test_sample_name_cannot_escape_the_corpus(client, sample):
+    """`Path(base) / "/etc/passwd"` yields "/etc/passwd" — pathlib discards the
+    base for an absolute right operand, so prefix filtering is not enough. The
+    check is membership in the real listing."""
+    r = client.post("/run", data={"sample": sample, "thesis": "services_rollup"})
+    assert r.status_code == 400
+
+
+@pytest.mark.parametrize("thesis", ["../../etc/passwd", "nonexistent", "../config"])
+def test_unknown_thesis_rejected_up_front(client, thesis):
+    """A bad thesis name is a 400 at submit time, not a background failure the
+    user discovers after watching a progress spinner."""
+    r = client.post("/run", data={"sample": "meridian_hvac.pdf", "thesis": thesis})
+    assert r.status_code == 400
+
+
+def test_valid_sample_is_accepted(client):
+    r = client.post("/run", data={"sample": "meridian_hvac.pdf", "thesis": "services_rollup"})
+    assert r.status_code == 200
+
+
+def test_upload_over_the_cap_is_rejected(client, monkeypatch):
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "max_upload_mb", 1)
+    big = b"%PDF-1.4\n" + b"x" * (2 * 1024 * 1024)
+    r = client.post(
+        "/run",
+        files={"upload": ("big.pdf", big, "application/pdf")},
+        data={"thesis": "services_rollup"},
+    )
+    assert r.status_code == 400
+    assert "exceeds" in r.text
+
+
+def test_job_store_is_bounded():
+    """Finished jobs are evicted; running jobs are never dropped, since losing
+    one would orphan a live progress poll."""
+    from app.main import _JOBS, _MAX_JOBS, Job, _prune_jobs
+
+    _JOBS.clear()
+    for i in range(_MAX_JOBS + 50):
+        _JOBS[f"j{i}"] = Job(job_id=f"j{i}", filename="x.pdf", done=True)
+    _JOBS["live"] = Job(job_id="live", filename="running.pdf", done=False)
+    _prune_jobs()
+    assert len(_JOBS) <= _MAX_JOBS + 1
+    assert "live" in _JOBS
+    _JOBS.clear()
