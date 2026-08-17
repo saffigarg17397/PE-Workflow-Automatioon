@@ -4,9 +4,16 @@ VENV := .venv
 PY := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
 
+# Interpreter used to build the venv. Override when the default `python3` is a
+# release some dependency has no wheel for yet:
+#   make install PYTHON=python3.12
+PYTHON ?= python3
+
 install:
-	python3 -m venv $(VENV)
+	$(PYTHON) -m venv --clear $(VENV)
+	$(PIP) install -q --upgrade pip
 	$(PIP) install -q -r requirements.txt
+	@$(PY) -c "import sys; print(f'installed on Python {sys.version.split()[0]}')"
 	@echo "installed. next: cp .env.example .env && edit, then make demo"
 
 cims:
