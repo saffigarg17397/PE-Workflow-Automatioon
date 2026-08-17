@@ -76,6 +76,8 @@ def run_level(level: str, slugs: list[str], thesis_name: str | None) -> LevelRes
             except (LLMError, ValueError) as e:
                 print(f" ERROR: {e}")
                 errors += 1
+                if isinstance(e, LLMError) and e.terminal:
+                    break
                 continue
             s = score_document(gt, run)
             accs.append(s.accuracy)

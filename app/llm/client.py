@@ -30,12 +30,46 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class LLMError(RuntimeError):
-    """Raised when a call fails in a way the pipeline should surface, not retry."""
+    """Raised when a call fails in a way the pipeline should surface, not retry.
+
+    `terminal` marks a condition that cannot resolve by trying another
+    document — an exhausted credit balance, a bad key, a revoked permission.
+    Batch callers abort on these instead of failing identically N more times,
+    which turns one clear message into a wall of noise and delays the fix.
+    """
+
+    def __init__(self, message: str, *, terminal: bool = False) -> None:
+        super().__init__(message)
+        self.terminal = terminal
 
 
 class RefusalError(LLMError):
     """The model declined. Rare on this content, but the pipeline degrades to a
     flagged field rather than crashing on an index error."""
+
+
+# Account-level conditions surface as a 400 rather than a dedicated exception
+# type, so they have to be recognised from the message. Matching on substrings
+# is brittle by nature — hence the fallback to non-terminal, which merely
+# forfeits the fast-abort rather than misclassifying a recoverable failure.
+_TERMINAL_MESSAGES = (
+    "credit balance is too low",
+    "billing",
+    "quota",
+)
+
+
+def _status_error(stage: str, e: anthropic.APIStatusError) -> LLMError:
+    msg = (e.message or "").lower()
+    terminal = any(m in msg for m in _TERMINAL_MESSAGES)
+    if terminal:
+        return LLMError(
+            f"{e.message}\n\n"
+            "  This is an account-level problem, not a problem with this document —\n"
+            "  every remaining document would fail identically, so stopping here.",
+            terminal=True,
+        )
+    return LLMError(f"API error {e.status_code} in stage '{stage}': {e.message}")
 
 
 class CachedDocument:
@@ -109,13 +143,17 @@ class LLMClient:
         try:
             resp = self._client.messages.create(**kwargs)
         except anthropic.NotFoundError as e:
-            raise LLMError(f"Model '{self.model}' not found — check the model id") from e
+            raise LLMError(
+                f"Model '{self.model}' not found — check the model id", terminal=True
+            ) from e
         except anthropic.AuthenticationError as e:
-            raise LLMError("ANTHROPIC_API_KEY missing or invalid") from e
+            raise LLMError("ANTHROPIC_API_KEY missing or invalid", terminal=True) from e
+        except anthropic.PermissionDeniedError as e:
+            raise LLMError(f"API key lacks permission: {e.message}", terminal=True) from e
         except anthropic.RateLimitError as e:
             raise LLMError(f"Rate limited after SDK retries: {e}") from e
         except anthropic.APIStatusError as e:
-            raise LLMError(f"API error {e.status_code} in stage '{stage}': {e.message}") from e
+            raise _status_error(stage, e) from e
         except anthropic.APIConnectionError as e:
             raise LLMError(f"Could not reach the API in stage '{stage}': {e}") from e
 
@@ -166,7 +204,7 @@ class LLMClient:
                 output_format=schema,
             )
         except anthropic.APIStatusError as e:
-            raise LLMError(f"API error {e.status_code} in stage '{stage}': {e.message}") from e
+            raise _status_error(stage, e) from e
         except anthropic.APIConnectionError as e:
             raise LLMError(f"Could not reach the API in stage '{stage}': {e}") from e
 

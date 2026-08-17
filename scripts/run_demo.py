@@ -99,6 +99,9 @@ def main() -> int:
         except LLMError as e:
             print(f"  FAILED: {e}")
             failures += 1
+            if e.terminal:
+                print("\nStopped — remaining documents skipped.")
+                break
             continue
         except (FileNotFoundError, ValueError) as e:
             print(f"  FAILED: {e}")

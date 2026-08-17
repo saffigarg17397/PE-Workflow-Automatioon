@@ -305,6 +305,9 @@ def main() -> int:
                 run = orchestrator.run(pdf, thesis=thesis)
             except (LLMError, ValueError) as e:
                 scores.append(DocScore(slug=gt["slug"], error=str(e)))
+                if isinstance(e, LLMError) and e.terminal:
+                    print("\nStopped — remaining documents skipped.")
+                    break
                 continue
 
         scores.append(score_document(gt, run))
