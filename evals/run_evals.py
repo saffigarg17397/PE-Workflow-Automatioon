@@ -26,7 +26,7 @@ import json
 import os
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -317,7 +317,7 @@ def main() -> int:
     print_scorecard(scores)
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     out = RESULTS_DIR / f"eval_{stamp}.json"
     out.write_text(
         json.dumps(

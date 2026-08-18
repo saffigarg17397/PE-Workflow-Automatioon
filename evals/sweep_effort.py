@@ -19,7 +19,7 @@ import json
 import os
 import sys
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -185,7 +185,7 @@ def main() -> int:
     print_table(results)
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     out = RESULTS_DIR / f"sweep_{stamp}.json"
     out.write_text(json.dumps([r.__dict__ for r in results], indent=2))
     print(f"results -> {out.relative_to(ROOT)}\n")

@@ -122,25 +122,43 @@ make serve                    # http://localhost:8000
 
 ## Results
 
-**Test suite:** 127 tests, no API key required, covering the two-pass join, confidence policy, every rule, thesis scoring, memo rendering, the web layer, parser robustness against model format drift, and input safety.
+**Test suite:** 163 tests, no API key required, covering the two-pass join, citation verification, confidence policy, every rule, thesis scoring, memo rendering, the web layer, parser robustness against model format drift, and input safety.
 
-**Eval scorecard:** `make eval` produces per-document accuracy, coverage, citation rate, and red-flag recall/precision.
-
-> **Not yet run against the live API.** The build environment had no API key, so the numbers below are unpopulated. Everything up to the API boundary is verified against a mocked client; the eval figures are the one thing that needs a key to produce. Run `make eval` and paste the scorecard here.
+**Eval scorecard.** Measured on `gemini-3.6-flash`, three of the five synthetic CIMs. The remaining two are pending free-tier quota, not withheld — the corpus is deliberately not mixed across models, since averaging two models into one accuracy figure would make the number unciteable.
 
 ```
 Document                     Acc     Cov   Cited   Correct   Wrong  Missed      Cost
 ------------------------------------------------------------------------------------
-meridian_hvac                  —       —       —         —       —       —         —
-brightpath_dental              —       —       —         —       —       —         —
-northgate_msp                  —       —       —         —       —       —         —
-verdant_landscaping            —       —       —         —       —       —         —
-atlas_bookkeeping              —       —       —         —       —       —         —
+brightpath_dental          82.4%  100.0%  100.0%        14       3       0   $0.1649
+meridian_hvac             100.0%  100.0%   76.5%        17       0       0   $0.1813
+verdant_landscaping        88.2%  100.0%  100.0%        15       2       0   $0.1668
+------------------------------------------------------------------------------------
+TOTAL                      90.2%  100.0%   91.3%        46       5       0   $0.5130
 ```
 
-Accuracy and coverage are reported separately on purpose: a field the tool declines to extract is scored as a *miss*, not an error. For a diligence tool, "not found" is correct behavior where inventing a number is not, and collapsing both into one accuracy figure would hide exactly the distinction that matters.
+**90.2% field accuracy, 91.3% of extracted values carrying a verified source page, and zero missed fields** across 51 extracted values. Cost is what the run *would* bill on a paid key — $0.17 and ~195s per memo.
 
-**Cost:** instrumented per stage and reported per run in the memo footer. The CIM document block is prompt-cached across all four stages, so `cache_read_tokens` should dominate after the first call — a zero there across a run means something is invalidating the prefix.
+Accuracy and coverage are reported separately on purpose: a field the tool declines to extract is scored as a *miss*, not an error. For a diligence tool, "not found" is correct behavior where inventing a number is not, and collapsing both into one accuracy figure would hide exactly the distinction that matters. Zero misses against five wrong values says the failure mode here is misreading a number, not silently dropping one.
+
+**Red-flag detection.**
+
+```
+Document                   Recall     Prec  Missed categories
+------------------------------------------------------------------------------------
+brightpath_dental             80%      50%  working_capital
+meridian_hvac                 n/a       0%  -            (clean control, no planted defects)
+verdant_landscaping          100%      43%  -
+```
+
+Recall is the number that matters for a screening tool and it is strong. **Precision is the honest weakness**, and it is two things at once.
+
+Part of it is measurement: ground truth lists only the *planted* defects, so a legitimate observation the authors did not plant scores as a false positive. Precision against that denominator understates real performance by construction.
+
+The rest is genuine over-flagging. The clean control produced ten findings against zero planted defects, and a screening tool that flags everything has told a reader nothing. The fix is prompt-side — raising the bar for what earns a finding — and it is measurable with the same harness, which is the point of having one.
+
+The deterministic rules are not affected by any of this: they compute the same finding from the same threshold every time, which is why every arithmetic check lives there rather than in the model pass.
+
+**Cost:** instrumented per stage and reported per run in the memo footer.
 
 ---
 

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Callable
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from app.analysis import llm_flags, rules, scoring
@@ -40,7 +40,7 @@ def run(
     if not isinstance(thesis, Thesis):
         thesis = load_thesis(thesis)
 
-    started = datetime.utcnow()
+    started = datetime.now(UTC)
     run_id = uuid.uuid4().hex[:12]
 
     progress("ingest", "running")
@@ -79,5 +79,5 @@ def run(
         memo=memo,
         telemetry=list(client.telemetry),
         started_at=started,
-        completed_at=datetime.utcnow(),
+        completed_at=datetime.now(UTC),
     )
