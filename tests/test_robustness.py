@@ -355,3 +355,60 @@ def test_build_context_caps_oversized_scalars():
     p.description = Cited(value="x" * 50_000)
     ctx = draft.build_context(p, scoring.run(p, load_thesis("services_rollup")), [])
     assert len(ctx) < 5_000
+
+
+# ------------------------------------------------------- citation legibility
+
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        # The reported case: one table, six identical markers.
+        (
+            "DSO rose from 38.0 [p.10] in 2022 [p.10] to 67.3 [p.10] in 2024 [p.10].",
+            "DSO rose from 38.0 [p.10] in 2022 to 67.3 in 2024.",
+        ),
+        # Distinct pages are distinct claims — all survive.
+        (
+            "Concentration is 34.6% [p.11] and the multiple is 9.0x [p.18].",
+            "Concentration is 34.6% [p.11] and the multiple is 9.0x [p.18].",
+        ),
+        # A new sentence is a new assertion, so the page is cited again.
+        (
+            "Revenue was $9.3M [p.9] in 2024 [p.9]. Margins fell to 14.0% [p.9].",
+            "Revenue was $9.3M [p.9] in 2024. Margins fell to 14.0% [p.9].",
+        ),
+    ],
+)
+def test_repeated_citations_within_a_sentence_are_collapsed(raw, expected):
+    from app.models.memo import tidy_citations
+
+    assert tidy_citations(raw) == expected
+
+
+def test_table_rows_keep_every_citation():
+    """A cell has no sentence context, so per-sentence dedupe would strip
+    provenance from columns that genuinely each need it."""
+    from app.models.memo import tidy_citations
+
+    row = "| Revenue | 6.80 [p.9] | 8.10 [p.9] | 9.30 [p.9] |"
+    assert tidy_citations(row) == row
+
+
+def test_tidying_applies_to_stored_runs_on_load():
+    """Seeds generated before this existed must render correctly without being
+    regenerated — the API calls that produced them are not free to repeat."""
+    from app.models.flags import ThesisFit
+    from app.models.memo import Memo, Recommendation
+
+    m = Memo(
+        company_name="X",
+        thesis_name="services_rollup",
+        recommendation=Recommendation.PASS,
+        recommendation_rationale="Fell from 38.0 [p.10] to 67.3 [p.10] over the period [p.10].",
+        business_overview="",
+        financial_summary="",
+        thesis_fit=ThesisFit(thesis_name="services_rollup"),
+        thesis_commentary="",
+    )
+    assert m.recommendation_rationale == "Fell from 38.0 [p.10] to 67.3 over the period."

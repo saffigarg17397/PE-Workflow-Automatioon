@@ -1,12 +1,54 @@
 """The IC screening memo and the run record that produced it."""
 
+import re
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.deal import DealProfile
 from app.models.flags import RedFlag, ThesisFit
+
+# Sentence boundary, approximated. Good enough for deciding where a citation
+# stops being a repeat: over-splitting only keeps a marker that could have been
+# dropped, which is the harmless direction to be wrong in.
+_SENTENCE = re.compile(r"(?<=[.:;])\s+")
+_MARKER = re.compile(r"\s*\[p\.(\d+(?:-\d+)?)\]")
+
+
+def tidy_citations(text: str) -> str:
+    """Drop repeated citations to the same page within a sentence.
+
+    The model cites every clause, which is the right instinct — it is showing
+    its work. But "38.0 days [p.10] in 2022 [p.10] to 49.5 days [p.10] in 2023
+    [p.10]" makes six identical provenance claims about one table and reads like
+    debug output rather than a memo. Keeping the first occurrence per page per
+    sentence loses nothing a reader needs: they still know which page the series
+    came from, and can still click it.
+
+    Scoped to *within* a sentence deliberately — a page cited again in the next
+    sentence supports a new assertion and keeps its marker. Table rows are left
+    alone entirely, since a cell carries no sentence context.
+    """
+    out = []
+    for line in text.split("\n"):
+        if line.lstrip().startswith("|"):
+            out.append(line)
+            continue
+        sentences = []
+        for sentence in _SENTENCE.split(line):
+            seen: set[str] = set()
+
+            def keep(m: re.Match[str], seen: set[str] = seen) -> str:
+                page = m.group(1)
+                if page in seen:
+                    return ""
+                seen.add(page)
+                return m.group(0)
+
+            sentences.append(_MARKER.sub(keep, sentence))
+        out.append(" ".join(s for s in sentences if s))
+    return "\n".join(out)
 
 
 class Recommendation(str, Enum):
@@ -143,6 +185,22 @@ class Memo(BaseModel):
     not_found: list[str] = Field(default_factory=list)
     confidence_note: str = ""
     health: ExtractionHealth = Field(default_factory=ExtractionHealth)
+
+    # Applied here rather than in each renderer: markdown, docx and the web view
+    # all display this prose, and three call sites would eventually disagree.
+    # Running on validation also means stored runs are tidied when they are
+    # loaded back, so seeds generated before this existed render correctly
+    # without being regenerated.
+    @field_validator(
+        "recommendation_rationale",
+        "business_overview",
+        "financial_summary",
+        "thesis_commentary",
+        mode="after",
+    )
+    @classmethod
+    def _tidy(cls, v: str) -> str:
+        return tidy_citations(v)
 
     @property
     def flags_by_severity(self) -> list[RedFlag]:
