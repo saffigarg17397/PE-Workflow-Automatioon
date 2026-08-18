@@ -28,6 +28,7 @@ There is no explicit cache resource to manage.
 from __future__ import annotations
 
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any, TypeVar, cast
@@ -39,6 +40,7 @@ from pydantic import BaseModel
 from pypdf import PdfReader
 
 from app.config import (
+    CALLS_PER_DOCUMENT,
     PRICING,
     RETIRED_FOR_NEW_KEYS,
     STAGE_EFFORT,
@@ -112,6 +114,41 @@ def _model_hint(model: str) -> str:
     return f"CIM_MODEL is set to '{model}', which this API version does not serve.\n{fix}"
 
 
+# Google states the exceeded limit inside the message ("limit: 20, model: ...").
+# Reading it back is worth the regex: free-tier allowances differ sharply per
+# model and change without notice, so any number hard-coded here will eventually
+# be a confident lie. An earlier version of this message quoted 1,500/day from
+# the docs for an older model while the account was actually capped at 20.
+_QUOTA_LIMIT = re.compile(r"limit:\s*(\d+)", re.IGNORECASE)
+_RETRY_AFTER = re.compile(r"retry in\s*([\d.]+)s", re.IGNORECASE)
+
+
+def _quota_hint(msg: str) -> str:
+    limit = _QUOTA_LIMIT.search(msg)
+    retry = _RETRY_AFTER.search(msg)
+    calls = CALLS_PER_DOCUMENT
+
+    lines = []
+    if limit:
+        n = int(limit.group(1))
+        lines.append(
+            f"Your free-tier allowance for this model is {n} requests, and this "
+            f"pipeline\n  spends {calls} per document — so {n // calls} document(s) "
+            f"exhausts it."
+        )
+    if retry:
+        lines.append(
+            f"Google suggests retrying in {float(retry.group(1)):.0f}s, which points at a "
+            f"per-minute\n  window rather than the daily cap. Wait, then re-run."
+        )
+    lines.append(
+        "Daily quotas reset at midnight Pacific. `make seed-resume` picks up only\n"
+        "  the documents that have no seed file yet, so nothing already generated\n"
+        "  is re-spent."
+    )
+    return "\n\n  ".join(lines)
+
+
 def _api_error(stage: str, e: genai_errors.APIError) -> LLMError:
     msg = (getattr(e, "message", "") or str(e)).lower()
     code = getattr(e, "code", None)
@@ -127,10 +164,7 @@ def _api_error(stage: str, e: genai_errors.APIError) -> LLMError:
 
     if "quota" in msg or "resource_exhausted" in msg or code == 429:
         return LLMError(
-            f"{getattr(e, 'message', e)}\n\n"
-            "  The free tier allows 1,500 requests/day and 15/minute on Flash.\n"
-            "  If this is the per-minute limit, wait sixty seconds and re-run;\n"
-            "  the daily limit resets at midnight Pacific.",
+            f"{getattr(e, 'message', e)}\n\n  {_quota_hint(msg)}",
             terminal=True,
         )
 

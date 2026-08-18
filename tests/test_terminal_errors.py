@@ -46,10 +46,11 @@ def test_invalid_key_says_where_to_get_one():
 
 def test_rate_limit_message_distinguishes_per_minute_from_per_day():
     """Both arrive as the same error, and the response to each is different:
-    one is a sixty-second wait, the other is tomorrow."""
-    err = _api_error("draft", _error("Quota exceeded for requests per minute", 429))
-    assert "wait sixty seconds" in str(err)
-    assert "daily limit resets" in str(err)
+    one is a short wait, the other is tomorrow. A stated retry-after is the
+    only reliable signal of which, so it is surfaced when present."""
+    err = _api_error("draft", _error("Quota exceeded. Please retry in 52.4s.", 429))
+    assert "per-minute" in str(err)
+    assert "midnight Pacific" in str(err)
 
 
 @pytest.mark.parametrize(
@@ -197,3 +198,28 @@ def test_resume_skips_documents_that_already_have_seeds(monkeypatch, capsys, tmp
 
     assert set(calls) == {"northgate_msp", "verdant_landscaping"}
     assert "skipping 3 already seeded" in capsys.readouterr().out
+
+
+def test_quota_message_reads_the_limit_off_the_error():
+    """The regression: this message quoted 1,500/day from the docs for an older
+    model while the account was actually capped at 20. Free-tier allowances vary
+    per model and change without notice, so the number must come from the error
+    rather than from anything written down here."""
+    from app.llm.client import _quota_hint
+
+    hint = _quota_hint(
+        "quota exceeded for metric: generate_content_free_tier_requests, "
+        "limit: 20, model: gemini-3.6-flash. please retry in 52.38s."
+    )
+    assert "20 requests" in hint
+    assert "5 document(s) exhausts it" in hint
+    assert "1,500" not in hint
+    assert "seed-resume" in hint
+
+
+def test_quota_message_survives_an_error_with_no_stated_limit():
+    """Google does not always state a limit; the hint must still be useful."""
+    from app.llm.client import _quota_hint
+
+    hint = _quota_hint("resource_exhausted")
+    assert "midnight Pacific" in hint

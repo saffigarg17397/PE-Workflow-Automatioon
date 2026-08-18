@@ -147,6 +147,17 @@ def main() -> int:
             print("Nothing left to run.")
             return 0
 
+    # Free-tier allowances are counted in requests and are small on current
+    # models — small enough that a full corpus can spend a day's quota in one
+    # run. Saying the number up front turns "it stopped three documents in"
+    # into a decision made before starting.
+    from app.config import CALLS_PER_DOCUMENT
+
+    print(
+        f"\n{len(targets)} document(s) x {CALLS_PER_DOCUMENT} requests each = "
+        f"{len(targets) * CALLS_PER_DOCUMENT} API requests."
+    )
+
     for path in targets:
         print(f"\n{path.name}")
         try:

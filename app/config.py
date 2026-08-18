@@ -76,6 +76,12 @@ THINKING_BUDGET: dict[str, int] = {
     "max": -1,
 }
 
+# One document costs this many API requests: extract_structured,
+# extract_cited, llm_flags, draft. It matters because free-tier allowances
+# are counted in requests, not tokens, and are small enough on current models
+# that a five-document corpus can exhaust a day in one run.
+CALLS_PER_DOCUMENT = 4
+
 # USD per million tokens. Free-tier keys are billed at zero regardless; these
 # exist so the telemetry reports what the same run *would* cost on a paid key,
 # which is the number worth quoting to someone evaluating the tool.

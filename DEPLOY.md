@@ -9,9 +9,11 @@ hosting and generation both.
 Model calls are free, so the thing to manage is no longer spend. Two constraints
 took its place, and the second is the one that matters:
 
-**Rate limits are shared.** The free tier allows 1,500 requests/day and 15/minute
-across the whole key. Each memo is four calls. An open run button plus a crawler
-in a loop exhausts the day's quota for everyone, including you.
+**Requests, not tokens, are the scarce thing.** Free-tier allowances are counted
+in requests and are small on current models — `gemini-3.6-flash` allows 20 a day,
+and one memo costs four. A five-document corpus is the entire daily quota. Do not
+trust a number written down anywhere, including here: read the limit off the 429,
+which states it. An open run button plus a crawler exhausts the day in minutes.
 
 **Free-tier prompts may be used for training.** That is fine for the synthetic
 CIMs in this repo. It is emphatically not fine the first time a visitor uploads
@@ -28,7 +30,7 @@ aren't regenerated per visitor. Live runs stay available behind
 | | Cost per visitor | Load time | Quota risk | Confidentiality |
 |---|---|---|---|---|
 | Demo mode (recommended) | $0 | instant | none | nothing leaves the box |
-| Open live runs | $0 | 40–90s | unbounded | visitor uploads reach Google |
+| Open live runs | $0 | 3–4 min | exhausts in ~5 visits | visitor uploads reach Google |
 
 ---
 
@@ -43,9 +45,14 @@ what AI Studio issues today) and older ones begin `AIza` (standard keys, being
 retired through 2026). If a third-party tool rejects an `AQ.` key, that tool is
 assuming the legacy format — this pipeline does not.
 
-Generating the full corpus is 20 requests against a 1,500/day allowance, so you
-can regenerate freely while tuning prompts. `make seed-one` runs a single
-document if you just want to see one end to end.
+Generating the full corpus is 20 requests, which on `gemini-3.6-flash` is a whole
+day's free allowance — so plan on one full run per day, or work a document at a
+time with `make seed-one`. `make seed-resume` finishes a corpus that stopped
+partway without re-spending on documents already seeded.
+
+If you need more throughput than that, `gemini-3.6-flash-lite` carries a larger
+free allowance for a smaller model — worth measuring with `make eval` before
+assuming the accuracy cost is acceptable.
 
 ---
 
@@ -60,7 +67,8 @@ make seed                     # runs all 5 CIMs, writes data/seed_runs/*.json
 make eval-seeds               # scores those same runs — no API calls, free
 ```
 
-`make seed` is 20 requests — about 1.3% of the daily free allowance.
+`make seed` is 20 requests. On the current free tier that is a full day's
+allowance, so get it right in one pass rather than iterating casually.
 
 `make eval-seeds` scores the artifacts you just generated rather than
 regenerating them. Scoring needs no model call at all, so it is both instant
