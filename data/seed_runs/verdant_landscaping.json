@@ -1,0 +1,650 @@
+{
+  "run_id": "77edc52d7697",
+  "source_file": "verdant_landscaping.pdf",
+  "page_count": 21,
+  "profile": {
+    "company_name": {
+      "value": "Verdant Grounds Management",
+      "citations": [
+        {
+          "page": 3,
+          "quote": "Verdant Grounds Management provides commercial landscape maintenance, enhancement and snow",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "description": {
+      "value": "Verdant Grounds Management provides commercial landscape maintenance, enhancement and snow removal services to property managers, HOAs and corporate campuses throughout the Carolinas.",
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "headquarters": {
+      "value": "Raleigh, North Carolina",
+      "citations": [
+        {
+          "page": 3,
+          "quote": "Founded in 2011 and headquartered in Raleigh, North Carolina, the Company employs approximately 96",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "year_founded": {
+      "value": 2011,
+      "citations": [
+        {
+          "page": 3,
+          "quote": "Founded in 2011 and headquartered in Raleigh, North Carolina, the Company employs approximately 96",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "employees": {
+      "value": 96,
+      "citations": [
+        {
+          "page": 3,
+          "quote": "Founded in 2011 and headquartered in Raleigh, North Carolina, the Company employs approximately 96",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "end_markets": {
+      "value": [
+        "Commercial real estate",
+        "HOA / residential communities",
+        "Corporate campuses",
+        "Retail centers"
+      ],
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "service_lines": {
+      "value": [
+        "Recurring landscape maintenance contracts",
+        "Landscape enhancement projects",
+        "Irrigation installation and repair",
+        "Seasonal services (snow, leaf removal)"
+      ],
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "revenue_model": {
+      "value": "mixed",
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "recurring_revenue_pct": {
+      "value": 64.0,
+      "citations": [
+        {
+          "page": 3,
+          "quote": "Approximately 64% of revenue is recurring or contracted in nature, providing visibility into forward periods.",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "financials": {
+      "value": [
+        {
+          "year": 2022,
+          "revenue": 5.1,
+          "gross_profit": 1.6,
+          "reported_ebitda": 0.6,
+          "adjusted_ebitda": 0.7
+        },
+        {
+          "year": 2023,
+          "revenue": 5.7,
+          "gross_profit": 1.8,
+          "reported_ebitda": 0.7,
+          "adjusted_ebitda": 0.8
+        },
+        {
+          "year": 2024,
+          "revenue": 6.4,
+          "gross_profit": 1.9,
+          "reported_ebitda": 0.7,
+          "adjusted_ebitda": 0.9
+        }
+      ],
+      "citations": [
+        {
+          "page": 18,
+          "quote": "FY2024 Revenue $6.4M",
+          "end_page": null
+        },
+        {
+          "page": 18,
+          "quote": "FY2024 Adjusted EBITDA $0.86M",
+          "end_page": null
+        },
+        {
+          "page": 9,
+          "quote": "Reported EBITDA $0.71",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "addbacks": {
+      "value": [
+        {
+          "description": "Owner vehicle and personal expenses",
+          "amount": 0.08,
+          "years_recurring": 3,
+          "is_labelled_one_time": false
+        },
+        {
+          "description": "Equipment write-off (2023)",
+          "amount": 0.04,
+          "years_recurring": 1,
+          "is_labelled_one_time": false
+        },
+        {
+          "description": "Transaction preparation",
+          "amount": 0.03,
+          "years_recurring": 1,
+          "is_labelled_one_time": false
+        }
+      ],
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "top_customers": {
+      "value": [
+        {
+          "name": "Triangle Property Group",
+          "revenue_pct": 14.8,
+          "tenure_years": 8
+        },
+        {
+          "name": "Cardinal HOA Management",
+          "revenue_pct": 11.3,
+          "tenure_years": 6
+        },
+        {
+          "name": "Research Park Campus Services",
+          "revenue_pct": 9.7,
+          "tenure_years": 5
+        },
+        {
+          "name": "Piedmont Retail Trust",
+          "revenue_pct": 7.2,
+          "tenure_years": 4
+        },
+        {
+          "name": "Carolina Corporate Centers",
+          "revenue_pct": 5.9,
+          "tenure_years": 3
+        }
+      ],
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "customer_count": {
+      "value": 126,
+      "citations": [
+        {
+          "page": 11,
+          "quote": "The Company serves approximately 126 active customer relationships.",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "top_customer_pct": {
+      "value": 14.8,
+      "citations": [
+        {
+          "page": 11,
+          "quote": "Triangle Property Group 14.8% 8",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "top_five_customer_pct": {
+      "value": 48.9,
+      "citations": [
+        {
+          "page": 11,
+          "quote": "Top 5 Total 48.9%",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "management": {
+      "value": [
+        {
+          "name": "Wes Tanner",
+          "role": "Chief Executive Officer",
+          "tenure_years": 13,
+          "is_founder": true,
+          "staying_post_close": true
+        },
+        {
+          "name": "Marisol Vega",
+          "role": "General Manager",
+          "tenure_years": 7,
+          "is_founder": false,
+          "staying_post_close": true
+        },
+        {
+          "name": "Kyle Brennan",
+          "role": "Controller",
+          "tenure_years": 3,
+          "is_founder": false,
+          "staying_post_close": true
+        }
+      ],
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "asking_price": {
+      "value": 5.6,
+      "citations": [
+        {
+          "page": 18,
+          "quote": "Enterprise Value (asking) $5.6M",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "asking_multiple": {
+      "value": 6.5,
+      "citations": [
+        {
+          "page": 18,
+          "quote": "Implied Multiple (FY2024 Adj. EBITDA) 6.5x",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "days_sales_outstanding": {
+      "value": [
+        38.0,
+        49.5,
+        67.3
+      ],
+      "citations": [
+        {
+          "page": 10,
+          "quote": "Days Sales Outstanding 38.0 49.5 67.3",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "acquisitions_completed": {
+      "value": 0,
+      "citations": [
+        {
+          "page": 4,
+          "quote": "The Company has completed 0 acquisitions since inception and today serves customers from its Raleigh, North Carolina headquarters.",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    }
+  },
+  "memo": {
+    "company_name": "Verdant Grounds Management",
+    "generated_at": "2026-08-17T23:37:36.420294",
+    "thesis_name": "services_rollup",
+    "recommendation": "pass",
+    "recommendation_rationale": "This transaction is recommended as a PASS due to critical cash conversion degradation, evidenced by Days Sales Outstanding deteriorating 77% [p.10] from 38 [p.10] to 67 days [p.10] while reported earnings grew. Further severe risks include basic operational contradictions in management's materials—which list irrigation simultaneously as existing revenue ($1.2M [p.15] / 19% [p.5] of 2024 [p.18] revenue) and a new growth initiative—and claim limited seasonality despite summer peak revenues ($0.70M [p.10]) reaching more than double winter levels ($0.30M [p.10]). Finally, reported recurring revenue visibility is severely compromised by standard 30-day [p.3] termination for convenience provisions across customer contracts.",
+    "business_overview": "Founded in 2011 [p.3] and headquartered in Raleigh, North Carolina [p.3], Verdant Grounds Management operates with 96 employees [p.3] providing commercial landscape maintenance, enhancement, irrigation, and seasonal services. Detailed extractions for description, end markets, service lines, revenue model, top customers, and management remain pending review and are not yet established. Based on available disclosures, the business serves commercial real estate, HOA communities, corporate campuses, and retail centers across 126 customers [p.11], reporting 64.0% [p.3] of its total revenue as recurring maintenance contracts.",
+    "financial_summary": "Top-line revenue expanded from $5.1 million [p.18] in 2022 [p.18] to $5.7 million [p.18] in 2023 [p.18] and $6.4 million [p.18] in 2024 [p.18], accompanied by gross profit growth from $1.6 million [p.18] to $1.8 million [p.18] and $1.9 million [p.18]. However, earnings quality shows notable divergence between reported and adjusted profitability figures. Reported EBITDA remained flat at $0.6 million [p.18] in 2022 [p.18], $0.7 million [p.18] in 2023 [p.18], and $0.7 million [p.18] in 2024 [p.18], whereas Adjusted EBITDA is presented higher at $0.7 million [p.18] in 2022 [p.18], $0.8 million [p.18] in 2023 [p.18], and $0.9 million [p.9] in 2024 [p.9]. Specific underlying addbacks—including owner personal expenses, equipment write-offs, and transaction preparation—remain pending review.\n\nEarnings quality is further degraded by severe working capital impairment. Days sales outstanding expanded continuously from 38.0 days [p.10] in 2022 [p.10] to 49.5 days [p.10] in 2023 [p.10] and 67.3 days [p.10] in 2024 [p.10]. This 77% [p.10] surge in DSO demonstrates that cash collection is failing to keep pace with recognized revenue, creating potential bad debt exposure or revenue recognition timing gaps that artificially inflate reported EBITDA relative to cash realization.",
+    "thesis_fit": {
+      "thesis_name": "services_rollup",
+      "criteria": [
+        {
+          "name": "Revenue in target band",
+          "passed": true,
+          "actual": "6.4",
+          "target": "$5M–$50M",
+          "weight": 1.0,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "EBITDA margin floor",
+          "passed": true,
+          "actual": "14.1",
+          "target": ">=12%",
+          "weight": 1.5,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "Organic growth",
+          "passed": true,
+          "actual": "12.0",
+          "target": ">=5% CAGR",
+          "weight": 1.5,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "Customer concentration ceiling",
+          "passed": true,
+          "actual": "14.8",
+          "target": "<=20% single customer",
+          "weight": 2.0,
+          "is_dealbreaker": true
+        },
+        {
+          "name": "Top-5 concentration ceiling",
+          "passed": true,
+          "actual": "48.9",
+          "target": "<=50% top 5",
+          "weight": 1.0,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "Recurring/contracted revenue",
+          "passed": true,
+          "actual": "64.0",
+          "target": ">=40% recurring",
+          "weight": 1.5,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "Earnings quality",
+          "passed": true,
+          "actual": "16.7",
+          "target": "addbacks <=20% of adj. EBITDA",
+          "weight": 2.0,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "Entry multiple",
+          "passed": true,
+          "actual": "6.5",
+          "target": "<=8.0x adj. EBITDA",
+          "weight": 1.0,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "Management continuity",
+          "passed": true,
+          "actual": "yes",
+          "target": "key managers staying post-close",
+          "weight": 1.0,
+          "is_dealbreaker": false
+        }
+      ],
+      "dealbreakers_hit": []
+    },
+    "thesis_commentary": "On paper, the business satisfies all screening criteria for the services rollup strategy, achieving pass marks across targeted revenue scale ($6.4 million [p.9]), organic growth, EBITDA margin, entry valuation at an asking multiple of 6.5x [p.18] ($5.6 million [p.18] asking price), customer concentration limits (largest customer at 14.8% [p.11] and top 5 [p.11] accounts at 48.9% [p.11]), and reported recurring revenue at 64.0% [p.3]. However, these pass marks are misleading when interpreted alongside operational red flags. High reported contract visibility (64.0% [p.3]) is undermined by 30-day [p.3] termination provisions, customer concentration compliance relies on single-account thresholds that mask broader account vulnerability, and executive management continuity consists of only 3 [p.13] individuals for a 96-employee [p.3] business. Furthermore, proposed inorganic expansion assumes acquisition capabilities despite management completing 0 [p.4] acquisitions in its 13-year [p.4] history.",
+    "red_flags": [
+      {
+        "category": "working_capital",
+        "severity": "high",
+        "title": "DSO deteriorated 77% (38 to 67 days)",
+        "detail": "Days sales outstanding rose from 38 to 67 days across the periods presented. Cash conversion is degrading while reported EBITDA grows — a gap that typically indicates either collection problems or revenue recognition that leads cash.",
+        "source": "rule",
+        "citations": [
+          {
+            "page": 10,
+            "quote": "Days Sales Outstanding 38.0 49.5 67.3",
+            "end_page": null
+          }
+        ],
+        "rule_id": "dso_deterioration"
+      },
+      {
+        "category": "internal_inconsistency",
+        "severity": "high",
+        "title": "Irrigation service line listed as existing revenue and new growth initiative",
+        "detail": "Section 2 identifies irrigation installation and repair as an existing service line generating 19% of FY2024 revenue ($1.2M), whereas Section 8 presents adding irrigation service lines as a new strategic growth initiative.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 5,
+            "quote": "Irrigation installation and repair",
+            "end_page": null
+          },
+          {
+            "page": 15,
+            "quote": "2. Add irrigation and lighting service lines",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "internal_inconsistency",
+        "severity": "high",
+        "title": "Claim of limited seasonality contradicted by monthly revenue distribution",
+        "detail": "Management asserts that the business experiences limited seasonality due to year-round maintenance contracts, yet monthly revenue data reveals substantial seasonal swings, with peak summer revenue ($0.70M in July) more than double winter revenue ($0.30M in January).",
+        "source": "model",
+        "citations": [
+          {
+            "page": 10,
+            "quote": "The business experiences limited seasonality given the year-round nature of maintenance contracts in the",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "contract_risk",
+        "severity": "high",
+        "title": "Revenue visibility claims undermined by 30-day termination for convenience terms",
+        "detail": "Management characterizes 64% of revenue as contracted and recurring to show strong forward visibility, yet customer contracts contain 30-day termination for convenience provisions allowing clients to cancel at any time without cause.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 3,
+            "quote": "Approximately 64% of revenue is recurring or contracted in nature, providing",
+            "end_page": null
+          },
+          {
+            "page": 11,
+            "quote": "Maintenance agreements are typically twelve months with annual renewal and thirty-day termination for",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "growth",
+        "severity": "medium",
+        "title": "Inorganic growth strategy proposed despite zero prior acquisition experience",
+        "detail": "The growth plan relies on selectively acquiring owner-operator landscape businesses, despite the company having completed zero acquisitions in its 13-year history and management lacking a track record in M&A execution or integration.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 4,
+            "quote": "completed 0 acquisitions since inception and today serves customers from its Raleigh, North Carolina",
+            "end_page": null
+          },
+          {
+            "page": 15,
+            "quote": "4. Selectively acquire owner-operator landscape businesses",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "growth",
+        "severity": "medium",
+        "title": "Unrealistic zero-capital assumption for regional market expansion",
+        "detail": "Management assumes geographic expansion into distant regional markets (Charlotte and Greenville) can be executed without material incremental capital investment, ignoring necessary capex for local facilities, equipment fleet expansion, and regional management.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 15,
+            "quote": "3. Extend into the Charlotte and Greenville markets",
+            "end_page": null
+          },
+          {
+            "page": 15,
+            "quote": "operational infrastructure and market position, and can be executed without material incremental capital",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "disclosure",
+        "severity": "medium",
+        "title": "Pervasive use of copy-pasted boilerplate text across key operating sections",
+        "detail": "Multiple core sections—including service line descriptions, customer case studies, and strategic growth initiatives—rely on verbatim copy-pasted boilerplate text, withholding account-specific details, operational metrics, and custom expansion plans.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 5,
+            "quote": "Representing approximately 27% of fiscal 2024 revenue, this service line is delivered by dedicated teams",
+            "end_page": null
+          },
+          {
+            "page": 12,
+            "quote": "A customer of the Company for 8 years, this relationship began with a single engagement and has",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "competitive",
+        "severity": "medium",
+        "title": "Unsubstantiated TAM and market share assertions",
+        "detail": "Management claims a $2 billion addressable market without providing supporting research or defined geographic boundaries, and asserts holding \"less than 2% share\" when $6.4 million in revenue actually represents a negligible 0.32% market share.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 7,
+            "quote": "market in the Company's core geography exceeds $2 billion, of which the Company represents less than",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "key_person",
+        "severity": "medium",
+        "title": "Thin executive team creates key-person dependency on founder",
+        "detail": "The management team consists of only three individuals (CEO/founder, General Manager, Controller) for a 96-employee operation, with no key operational heads, sales leaders, or middle management identified, creating severe risk around founder departure.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 13,
+            "quote": "Wes Tanner, Chief Executive Officer. Founded the Company in 2011 and has served in the current role",
+            "end_page": null
+          },
+          {
+            "page": 13,
+            "quote": "Kyle Brennan, Controller. Joined the Company and has served in the current role for 3 years. Is",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      }
+    ],
+    "diligence_priorities": [
+      "Audit accounts receivable aging schedules and cash collection logs to establish reasons for DSO increasing from 38.0 [p.10] to 67.3 days [p.10] and calculate necessary bad debt write-downs.",
+      "Reconcile operational records regarding irrigation service revenue ($1.2M [p.15] / 19% [p.5] of FY2024 [p.18] revenue) to resolve the contradiction of presenting an existing business line as a new strategic growth initiative.",
+      "Analyze monthly revenue and cash receipts to model true working capital requirements and seasonal earnings swings between peak summer ($0.70M [p.10]) and winter ($0.30M [p.10]) periods.",
+      "Review customer contract documentation across the 64.0% [p.3] recurring revenue base to evaluate true cancellation exposure under 30-day [p.3] convenience termination terms.",
+      "Audit supporting documentation for addbacks driving the spread between reported $0.7 million [p.18] EBITDA and $0.9 million [p.9] adjusted EBITDA in 2024 [p.9].",
+      "Conduct account-level contract reviews for primary client Triangle Property Group (14.8% [p.11] revenue) and top 5 [p.11] accounts representing 48.9% [p.11] of total revenue.",
+      "Assess organizational structure and middle management depth beneath the 3 [p.13] executive team members to address key-person risk across 96 employees [p.3]."
+    ],
+    "unreviewed_fields": [
+      "description",
+      "end_markets",
+      "service_lines",
+      "revenue_model",
+      "addbacks",
+      "top_customers",
+      "management"
+    ],
+    "not_found": [],
+    "confidence_note": "7 field(s) below high confidence or uncited; 0 field(s) not found in the source document. 100% of extracted fields carry a source page. Figures in this memo are cited to source pages; uncited claims are model-generated prose and should be verified.",
+    "health": {
+      "fields_total": 20,
+      "fields_extracted": 20,
+      "fields_cited": 13,
+      "fields_citable": 13,
+      "facts_located": 15,
+      "quotes_rejected": 0,
+      "flags_parsed": 8
+    }
+  },
+  "telemetry": [
+    {
+      "stage": "extract_structured",
+      "model": "gemini-3.6-flash",
+      "effort": "high",
+      "input_tokens": 11430,
+      "output_tokens": 5107,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "latency_ms": 24241,
+      "cost_usd": 0.027724
+    },
+    {
+      "stage": "extract_cited",
+      "model": "gemini-3.6-flash",
+      "effort": "high",
+      "input_tokens": 5540,
+      "output_tokens": 3318,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "latency_ms": 15280,
+      "cost_usd": 0.016598
+    },
+    {
+      "stage": "llm_flags",
+      "model": "gemini-3.6-flash",
+      "effort": "high",
+      "input_tokens": 5428,
+      "output_tokens": 14740,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "latency_ms": 70989,
+      "cost_usd": 0.059346
+    },
+    {
+      "stage": "draft",
+      "model": "gemini-3.6-flash",
+      "effort": "high",
+      "input_tokens": 2670,
+      "output_tokens": 16306,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "latency_ms": 75214,
+      "cost_usd": 0.06315
+    }
+  ],
+  "started_at": "2026-08-17T23:34:30.616739",
+  "completed_at": "2026-08-17T23:37:36.420637"
+}

@@ -1,0 +1,730 @@
+{
+  "run_id": "6faf3b35e2f1",
+  "source_file": "brightpath_dental.pdf",
+  "page_count": 21,
+  "profile": {
+    "company_name": {
+      "value": "BrightPath Dental Partners",
+      "citations": [
+        {
+          "page": 3,
+          "quote": "BrightPath Dental Partners is a dental support organization operating eleven affiliated practices across central Florida.",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "description": {
+      "value": "BrightPath Dental Partners is a dental support organization operating eleven affiliated practices across central Florida. The Company provides centralized administrative, marketing and revenue cycle services to its affiliated practices under long-term management services agreements.",
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "headquarters": {
+      "value": "Tampa, Florida",
+      "citations": [
+        {
+          "page": 3,
+          "quote": "Founded in 2013 and headquartered in Tampa, Florida, the Company employs approximately 88 people and generated revenue of $9.3 million and Adjusted EBITDA of $1.34 million in fiscal 2024, representing an Adjusted EBITDA margin of 14.4%.",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "year_founded": {
+      "value": 2013,
+      "citations": [
+        {
+          "page": 3,
+          "quote": "Founded in 2013 and headquartered in Tampa, Florida, the Company employs approximately 88 people and generated revenue of $9.3 million and Adjusted EBITDA of $1.34 million in fiscal 2024, representing an Adjusted EBITDA margin of 14.4%.",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "employees": {
+      "value": 88,
+      "citations": [
+        {
+          "page": 6,
+          "quote": "As of the most recent period, the Company employed 88 full-time equivalents.",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "end_markets": {
+      "value": [
+        "General dentistry",
+        "Pediatric dentistry",
+        "Orthodontics"
+      ],
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "service_lines": {
+      "value": [
+        "Practice management services",
+        "Revenue cycle management",
+        "Centralized marketing and patient acquisition",
+        "Procurement and supply chain"
+      ],
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "revenue_model": {
+      "value": "mixed",
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "recurring_revenue_pct": {
+      "value": 31.0,
+      "citations": [
+        {
+          "page": 3,
+          "quote": "Approximately 31% of revenue is recurring or contracted in nature, providing visibility into forward periods.",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "financials": {
+      "value": [
+        {
+          "year": 2022,
+          "revenue": 6.8,
+          "gross_profit": 2.3,
+          "reported_ebitda": 0.8,
+          "adjusted_ebitda": 1.0
+        },
+        {
+          "year": 2023,
+          "revenue": 8.1,
+          "gross_profit": 2.7,
+          "reported_ebitda": 0.9,
+          "adjusted_ebitda": 1.2
+        },
+        {
+          "year": 2024,
+          "revenue": 9.3,
+          "gross_profit": 3.0,
+          "reported_ebitda": 0.9,
+          "adjusted_ebitda": 1.3
+        }
+      ],
+      "citations": [
+        {
+          "page": 3,
+          "quote": "Founded in 2013 and headquartered in Tampa, Florida, the Company employs approximately 88 people and generated revenue of $9.3 million and Adjusted EBITDA of $1.34 million in fiscal 2024, representing an Adjusted EBITDA margin of 14.4%.",
+          "end_page": null
+        },
+        {
+          "page": 3,
+          "quote": "Founded in 2013 and headquartered in Tampa, Florida, the Company employs approximately 88 people and generated revenue of $9.3 million and Adjusted EBITDA of $1.34 million in fiscal 2024, representing an Adjusted EBITDA margin of 14.4%.",
+          "end_page": null
+        },
+        {
+          "page": 9,
+          "quote": "Reported EBITDA $0.94",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "addbacks": {
+      "value": [
+        {
+          "description": "De novo practice ramp losses",
+          "amount": 0.18,
+          "years_recurring": 3,
+          "is_labelled_one_time": false
+        },
+        {
+          "description": "Owner compensation normalization",
+          "amount": 0.13,
+          "years_recurring": 3,
+          "is_labelled_one_time": false
+        },
+        {
+          "description": "Acquisition integration costs",
+          "amount": 0.09,
+          "years_recurring": 3,
+          "is_labelled_one_time": false
+        }
+      ],
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "top_customers": {
+      "value": [
+        {
+          "name": "Sunshine Health (Medicaid MCO)",
+          "revenue_pct": 34.6,
+          "tenure_years": 6
+        },
+        {
+          "name": "Florida Blue",
+          "revenue_pct": 19.8,
+          "tenure_years": 8
+        },
+        {
+          "name": "MCNA Dental",
+          "revenue_pct": 12.1,
+          "tenure_years": 5
+        },
+        {
+          "name": "Cigna Dental",
+          "revenue_pct": 7.4,
+          "tenure_years": 4
+        },
+        {
+          "name": "Self-pay / other",
+          "revenue_pct": 6.2,
+          "tenure_years": null
+        }
+      ],
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "customer_count": {
+      "value": 5,
+      "citations": [
+        {
+          "page": 11,
+          "quote": "The Company serves approximately 5 principal payor and customer relationships.",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "top_customer_pct": {
+      "value": 34.6,
+      "citations": [
+        {
+          "page": 11,
+          "quote": "Sunshine Health (Medicaid MCO) 34.6% 6",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "top_five_customer_pct": {
+      "value": 80.1,
+      "citations": [
+        {
+          "page": 11,
+          "quote": "Top 5 Total 80.1%",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "management": {
+      "value": [
+        {
+          "name": "Dr. Priya Raman",
+          "role": "Chief Executive Officer",
+          "tenure_years": 11,
+          "is_founder": true,
+          "staying_post_close": true
+        },
+        {
+          "name": "Curtis Hale",
+          "role": "Chief Financial Officer",
+          "tenure_years": 3,
+          "is_founder": false,
+          "staying_post_close": true
+        },
+        {
+          "name": "Dana Whitfield",
+          "role": "VP Operations",
+          "tenure_years": 4,
+          "is_founder": false,
+          "staying_post_close": false
+        }
+      ],
+      "citations": [],
+      "confidence": "medium",
+      "note": "Extracted without citation pass"
+    },
+    "asking_price": {
+      "value": 12.1,
+      "citations": [
+        {
+          "page": 18,
+          "quote": "Enterprise Value (asking) $12.1M",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "asking_multiple": {
+      "value": 9.0,
+      "citations": [
+        {
+          "page": 18,
+          "quote": "Implied Multiple (FY2024 Adj. EBITDA) 9.0x",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "days_sales_outstanding": {
+      "value": [
+        52.0,
+        55.5,
+        58.1
+      ],
+      "citations": [
+        {
+          "page": 10,
+          "quote": "Days Sales Outstanding 52.0 55.5 58.1",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    },
+    "acquisitions_completed": {
+      "value": 7,
+      "citations": [
+        {
+          "page": 4,
+          "quote": "The Company has completed 7 acquisitions since inception and today serves customers from its Tampa, Florida headquarters.",
+          "end_page": null
+        }
+      ],
+      "confidence": "high",
+      "note": null
+    }
+  },
+  "memo": {
+    "company_name": "BrightPath Dental Partners",
+    "generated_at": "2026-08-17T23:29:19.346931",
+    "thesis_name": "services_rollup",
+    "recommendation": "pass",
+    "recommendation_rationale": "We recommend a PASS on BrightPath Dental Partners due to a critical dealbreaker failure in customer concentration, where single-customer revenue reaches 34.6% [p.11] (Sunshine Health) against our maximum 20% [p.11] threshold. The transaction presents additional high-severity risks, including top-five customer concentration of 80.1% [p.11], earnings adjustments accounting for 30.8% [p.3] of adjusted EBITDA, key-person disruption from the planned post-close departure of VP of Operations Dana Whitfield [p.13], and payor contracts allowing 90-day [p.11] terminations. Consequently, the asking price of $12.1M [p.18] representing a 9.0x [p.18] adjusted EBITDA multiple is unsupportable.",
+    "business_overview": "BrightPath Dental Partners is a dental support organization (DSO) founded in 2013 [p.3] and headquartered in Tampa, Florida [p.3] that operates 11 [p.3] affiliated practices across central Florida [p.3] with 88 [p.6] employees. The company generates revenue by providing centralized management, administrative, revenue cycle, marketing, and procurement services to its affiliated practices under management agreements. While 7 [p.4] acquisitions have been completed to date, the deal materials omit practice-level clinical, financial, and geographic performance details across the 11 [p.3] locations. Furthermore, detailed extracted fields regarding company description, end markets, service lines, revenue model, top customers, and management composition remain pending review.",
+    "financial_summary": "BrightPath Dental Partners reported revenue of $6.8M [p.3] in 2022, $8.1M [p.3] in 2023, and $9.3M [p.9] in 2024, representing a headline compound annual growth rate of 16.9% [p.4]. However, this growth incorporates 7 [p.4] completed acquisitions, and organic same-store performance is not disclosed. Gross profit progressed from $2.3M [p.3] in 2022 to $2.7M [p.3] in 2023 and $3.0M [p.3] in 2024. Working capital indicators demonstrate steady deterioration, as days sales outstanding increased from 52.0 [p.10] in 2022 to 55.5 [p.10] in 2023 and 58.1 [p.10] in 2024. Additionally, management's narrative attributing revenue weighting to Q4 benefit resets is contradicted by historical quarterly results where Q4 revenue ($1.7M [p.10] in 2022, $2.0M [p.10] in 2023, and $2.3M [p.10] in 2024) consistently lagged Q2 and Q3 revenue ($1.8M [p.10] in 2022, $2.1M [p.10] in 2023, and $2.4M [p.10] in 2024).\n\nEarnings quality exhibits significant divergence between reported and adjusted EBITDA: reported EBITDA was $0.8M [p.3] in 2022, $0.9M [p.3] in 2023, and $0.9M [p.3] in 2024, compared to adjusted EBITDA of $1.0M [p.3] in 2022, $1.2M [p.3] in 2023, and $1.3M [p.3] in 2024. Adjusted EBITDA margins were 14.7% [p.3] in 2022, 14.8% [p.3] in 2023, and 14.0% [p.3] in 2024. Total add-backs of $0.40M [p.3] account for 30.8% [p.3] of 2024 [p.3] adjusted EBITDA, exceeding prudent limits and diluting earnings quality, while specific add-back line items remain pending review.",
+    "thesis_fit": {
+      "thesis_name": "services_rollup",
+      "criteria": [
+        {
+          "name": "Revenue in target band",
+          "passed": true,
+          "actual": "9.3",
+          "target": "$5M–$50M",
+          "weight": 1.0,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "EBITDA margin floor",
+          "passed": true,
+          "actual": "14.0",
+          "target": ">=12%",
+          "weight": 1.5,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "Organic growth",
+          "passed": true,
+          "actual": "16.9",
+          "target": ">=5% CAGR",
+          "weight": 1.5,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "Customer concentration ceiling",
+          "passed": false,
+          "actual": "34.6",
+          "target": "<=20% single customer",
+          "weight": 2.0,
+          "is_dealbreaker": true
+        },
+        {
+          "name": "Top-5 concentration ceiling",
+          "passed": false,
+          "actual": "80.1",
+          "target": "<=50% top 5",
+          "weight": 1.0,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "Recurring/contracted revenue",
+          "passed": false,
+          "actual": "31.0",
+          "target": ">=40% recurring",
+          "weight": 1.5,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "Earnings quality",
+          "passed": false,
+          "actual": "30.8",
+          "target": "addbacks <=20% of adj. EBITDA",
+          "weight": 2.0,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "Entry multiple",
+          "passed": false,
+          "actual": "9.0",
+          "target": "<=8.0x adj. EBITDA",
+          "weight": 1.0,
+          "is_dealbreaker": false
+        },
+        {
+          "name": "Management continuity",
+          "passed": false,
+          "actual": "no",
+          "target": "key managers staying post-close",
+          "weight": 1.0,
+          "is_dealbreaker": false
+        }
+      ],
+      "dealbreakers_hit": [
+        "Customer concentration ceiling"
+      ]
+    },
+    "thesis_commentary": "BrightPath Dental Partners achieves an overall thesis score of 32% [p.3] with 100% [p.3] criterion coverage under the services rollup strategy. The company meets thesis standards in baseline revenue scale ($9.3M [p.9] actual vs. $5M–$50M [p.9] target), EBITDA margin floor (14.0% [p.3] actual vs. >=12% [p.3] target), and top-line growth (16.9% [p.4] actual vs. >=5% [p.4] target). However, it fails six key criteria, led by a dealbreaker in single-customer concentration where Sunshine Health represents 34.6% [p.11] of revenue against the <=20% [p.11] ceiling. Top-five concentration also fails at 80.1% [p.11] versus the <=50% [p.11] limit. Contracted recurring revenue reaches only 31.0% [p.3] against the >=40% [p.3] requirement, and earnings quality fails as add-backs comprise 30.8% [p.3] of adjusted EBITDA compared to the <=20% [p.3] threshold. Finally, valuation and human capital criteria fail due to an entry multiple of 9.0x [p.18] adjusted EBITDA against the <=8.0x [p.18] cap, and a failure in management continuity caused by the planned post-transaction departure of VP of Operations Dana Whitfield [p.13].",
+    "red_flags": [
+      {
+        "category": "customer_concentration",
+        "severity": "high",
+        "title": "Single-customer concentration at 34.6% of revenue (Sunshine Health (Medicaid MCO))",
+        "detail": "The largest customer represents 34.6% of revenue, above the 20% screening threshold. Loss or repricing of this relationship would materially affect earnings.",
+        "source": "rule",
+        "citations": [
+          {
+            "page": 11,
+            "quote": "Sunshine Health (Medicaid MCO) 34.6% 6",
+            "end_page": null
+          }
+        ],
+        "rule_id": "customer_concentration"
+      },
+      {
+        "category": "customer_concentration",
+        "severity": "high",
+        "title": "Top-five customer concentration at 80.1% of revenue",
+        "detail": "The five largest relationships account for 80.1% of revenue. Revenue durability depends on a narrow set of counterparties.",
+        "source": "rule",
+        "citations": [
+          {
+            "page": 11,
+            "quote": "Top 5 Total 80.1%",
+            "end_page": null
+          }
+        ],
+        "rule_id": "top_five_concentration"
+      },
+      {
+        "category": "earnings_quality",
+        "severity": "high",
+        "title": "Add-backs represent 30.8% of adjusted EBITDA",
+        "detail": "$0.40M of adjustments bridge reported to adjusted EBITDA. The adjusted figure is the basis for the asking multiple, so the quality of these adjustments drives the effective entry price.",
+        "source": "rule",
+        "citations": [
+          {
+            "page": 3,
+            "quote": "Founded in 2013 and headquartered in Tampa, Florida, the Company employs approximately 88 people and generated revenue of $9.3 million and Adjusted EBITDA of $1.34 million in fiscal 2024, representing an Adjusted EBITDA margin of 14.4%.",
+            "end_page": null
+          },
+          {
+            "page": 3,
+            "quote": "Founded in 2013 and headquartered in Tampa, Florida, the Company employs approximately 88 people and generated revenue of $9.3 million and Adjusted EBITDA of $1.34 million in fiscal 2024, representing an Adjusted EBITDA margin of 14.4%.",
+            "end_page": null
+          }
+        ],
+        "rule_id": "addback_aggression"
+      },
+      {
+        "category": "growth",
+        "severity": "high",
+        "title": "Headline 16.9% CAGR spans 7 completed acquisitions",
+        "detail": "The Company has completed 7 acquisitions. Reported growth of 16.9% is therefore a blend of organic and acquired revenue, and the organic rate is not disclosed. Same-store or pro-forma organic growth must be established before the growth story can be underwritten.",
+        "source": "rule",
+        "citations": [
+          {
+            "page": 4,
+            "quote": "The Company has completed 7 acquisitions since inception and today serves customers from its Tampa, Florida headquarters.",
+            "end_page": null
+          },
+          {
+            "page": 3,
+            "quote": "Founded in 2013 and headquartered in Tampa, Florida, the Company employs approximately 88 people and generated revenue of $9.3 million and Adjusted EBITDA of $1.34 million in fiscal 2024, representing an Adjusted EBITDA margin of 14.4%.",
+            "end_page": null
+          },
+          {
+            "page": 3,
+            "quote": "Founded in 2013 and headquartered in Tampa, Florida, the Company employs approximately 88 people and generated revenue of $9.3 million and Adjusted EBITDA of $1.34 million in fiscal 2024, representing an Adjusted EBITDA margin of 14.4%.",
+            "end_page": null
+          }
+        ],
+        "rule_id": "inorganic_growth"
+      },
+      {
+        "category": "internal_inconsistency",
+        "severity": "high",
+        "title": "Payor Diversification Claim Contradicted by 34.6% Single Payor Concentration",
+        "detail": "The Executive Summary asserts that no single payor represents a disproportionate share of practice collections, directly contradicting the customer base table where Sunshine Health alone accounts for 34.6% of total revenue and the top 5 payors represent 80.1%.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 3,
+            "quote": "Diversified customer base. The Company benefits from a diversified payor base and broad patient population, with no single payor relationship representing a disproportionate share of practice collections.",
+            "end_page": null
+          },
+          {
+            "page": 11,
+            "quote": "Sunshine Health (Medicaid MCO)",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "contract_risk",
+        "severity": "high",
+        "title": "Unilateral Payor Fee Revisions and 90-Day Termination Provisions",
+        "detail": "Payor contracts permit termination on short notice (90 days) and grant payors unilateral discretion to revise fee schedules, exposing the business to severe revenue loss and margin compression without contractual protection.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 11,
+            "quote": "Payor agreements are generally terminable on 90 days notice and are subject to periodic fee schedule revision at the payor's discretion.",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "key_person",
+        "severity": "high",
+        "title": "Planned Departure of Key Operational Executive Post-Transaction",
+        "detail": "Dana Whitfield, VP of Operations, plans to depart post-transaction; as the only dedicated operational executive on a thin three-person management team, her departure creates immediate operational disruption and key-person risk.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 13,
+            "quote": "Has indicated an intention to transition out of the business following a transaction, and will make herself available for a customary transition period.",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "internal_inconsistency",
+        "severity": "medium",
+        "title": "Q4 Seasonality Narrative Contradicted by Quarterly Financial Results",
+        "detail": "Management asserts that revenue is weighted toward Q4 due to patient benefit resets, but historical quarterly data shows Q4 revenue was lower than Q2 and Q3 revenue in 2022 ($1.7M vs $1.8M), 2023 ($2.0M vs $2.1M), and 2024 ($2.3M vs $2.4M).",
+        "source": "model",
+        "citations": [
+          {
+            "page": 10,
+            "quote": "Revenue is modestly weighted toward the fourth quarter as patients utilize remaining annual benefit maximums.",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "internal_inconsistency",
+        "severity": "medium",
+        "title": "Contradiction Between Executive Summary and Service Line Contracted Revenue Share",
+        "detail": "Page 3 states that approximately 31% of total revenue is contracted or recurring, whereas Page 5 claims Practice Management alone represents 42% of revenue priced on a contracted annual basis (and Centralized Marketing another 19%), creating an inconsistent picture of revenue visibility.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 3,
+            "quote": "Approximately 31% of revenue is recurring or contracted in nature, providing visibility into forward periods.",
+            "end_page": null
+          },
+          {
+            "page": 5,
+            "quote": "Representing approximately 42% of fiscal 2024 revenue, this service line is delivered by dedicated teams operating under standardized procedures and quality controls. Management believes the offering is well positioned relative to local competitors given the Company's technical depth, response-time commitments and established customer relationships. Pricing is generally established on a contracted annual basis, with periodic escalation provisions.",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "disclosure",
+        "severity": "medium",
+        "title": "Omission of Practice-Level Economics and Affiliate Locations",
+        "detail": "The document fails to disclose practice-level locations, clinical performance, revenue, EBITDA, or patient volume across the 11 affiliated practices, making it impossible to evaluate individual site viability or site-level margin drag.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 3,
+            "quote": "BrightPath Dental Partners is a dental support organization operating eleven affiliated practices across central Florida.",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "disclosure",
+        "severity": "medium",
+        "title": "Omission of Clinical Leadership and Dental Governance Structure",
+        "detail": "The management presentation lacks any disclosure regarding a Chief Medical/Dental Officer, clinical director, or medical advisory committee, which is critical for legal compliance under DSO corporate practice of dentistry laws and clinical oversight across 11 practice sites.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 13,
+            "quote": "Dr. Priya Raman, Chief Executive Officer. Founded the Company in 2013 and has served in the current role for 11 years. Is expected to continue with the business following a transaction.",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "growth",
+        "severity": "medium",
+        "title": "Unsubstantiated Zero-Capital Out-of-State Regional Expansion Plan",
+        "detail": "Expanding a 11-practice regional DSO into new state jurisdictions (Georgia and Alabama) requires substantial capital for legal entity structuring (MSO/PC agreements), regulatory compliance, and regional recruiting, making the claim of zero material incremental capital investment unrealistic.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 15,
+            "quote": "Extend into the Georgia and Alabama markets",
+            "end_page": null
+          },
+          {
+            "page": 15,
+            "quote": "Management believes this initiative is supported by the Company's existing customer relationships, operational infrastructure and market position, and can be executed without material incremental capital investment.",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "competitive",
+        "severity": "low",
+        "title": "Unsupported Addressable Market Size and Market Share Assertions",
+        "detail": "Management asserts a $2 billion addressable market without citing independent market data or methodology, and describing $9.3 million in revenue as \"less than 2% share\" (actual share is ~0.46%) overstates the company's relative scale.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 7,
+            "quote": "Management estimates the addressable market in the Company's core geography exceeds $2 billion, of which the Company represents less than 2% share, implying substantial runway for both organic and acquisition-led expansion.",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      },
+      {
+        "category": "disclosure",
+        "severity": "low",
+        "title": "Generic Placeholder Boilerplate Across Service Line and Market Segment Descriptions",
+        "detail": "Descriptions across four distinct service lines and three clinical end markets use identical copypasted narrative containing non-dental terms (\"technical depth\", \"response-time commitments\"), reflecting weak disclosure quality and reliance on generic off-the-shelf document templates.",
+        "source": "model",
+        "citations": [
+          {
+            "page": 5,
+            "quote": "Management believes the offering is well positioned relative to local competitors given the Company's technical depth, response-time commitments and established customer relationships.",
+            "end_page": null
+          },
+          {
+            "page": 6,
+            "quote": "Customers in this segment value reliability, responsiveness and compliance documentation. Management believes the Company's positioning in this segment is durable and supports above-market retention.",
+            "end_page": null
+          }
+        ],
+        "rule_id": null
+      }
+    ],
+    "diligence_priorities": [
+      "Evaluate contract provisions, fee schedule adjustment rights, and 90-day [p.11] termination terms for Sunshine Health, which accounts for 34.6% [p.11] of total revenue.",
+      "Reconcile contradictory disclosures regarding payor diversification [p.3] against concentration data showing 5 [p.11] payors generate 80.1% [p.11] of total revenue.",
+      "Audit reported add-backs totaling $0.40M [p.3] (30.8% [p.3] of 2024 [p.3] adjusted EBITDA) to determine earnings quality and establish true baseline profitability, noting detailed add-back items are currently pending review.",
+      "Request practice-level historical financial statements to separate organic same-store revenue growth from the 7 [p.4] completed acquisitions embedded in the 16.9% [p.4] headline CAGR.",
+      "Develop an operational transition and recruitment strategy to address key-person risk stemming from the planned post-close departure of VP of Operations Dana Whitfield [p.13].",
+      "Request individual practice performance, clinical metrics, and legal MSO governance structures across all 11 [p.3] affiliated practice locations."
+    ],
+    "unreviewed_fields": [
+      "description",
+      "end_markets",
+      "service_lines",
+      "revenue_model",
+      "addbacks",
+      "top_customers",
+      "management"
+    ],
+    "not_found": [],
+    "confidence_note": "7 field(s) below high confidence or uncited; 0 field(s) not found in the source document. 100% of extracted fields carry a source page. Figures in this memo are cited to source pages; uncited claims are model-generated prose and should be verified.",
+    "health": {
+      "fields_total": 20,
+      "fields_extracted": 20,
+      "fields_cited": 13,
+      "fields_citable": 13,
+      "facts_located": 15,
+      "quotes_rejected": 0,
+      "flags_parsed": 10
+    }
+  },
+  "telemetry": [
+    {
+      "stage": "extract_structured",
+      "model": "gemini-3.6-flash",
+      "effort": "high",
+      "input_tokens": 11430,
+      "output_tokens": 4375,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "latency_ms": 22784,
+      "cost_usd": 0.024979
+    },
+    {
+      "stage": "extract_cited",
+      "model": "gemini-3.6-flash",
+      "effort": "high",
+      "input_tokens": 5557,
+      "output_tokens": 4782,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "latency_ms": 19736,
+      "cost_usd": 0.0221
+    },
+    {
+      "stage": "llm_flags",
+      "model": "gemini-3.6-flash",
+      "effort": "high",
+      "input_tokens": 5445,
+      "output_tokens": 14282,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "latency_ms": 66432,
+      "cost_usd": 0.057641
+    },
+    {
+      "stage": "draft",
+      "model": "gemini-3.6-flash",
+      "effort": "high",
+      "input_tokens": 3046,
+      "output_tokens": 15432,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "latency_ms": 84346,
+      "cost_usd": 0.060154
+    }
+  ],
+  "started_at": "2026-08-17T23:26:05.963964",
+  "completed_at": "2026-08-17T23:29:19.347650"
+}
